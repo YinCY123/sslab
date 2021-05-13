@@ -1,0 +1,16 @@
+# ignore .Rhistory
+.Rhistory
+
+# ignore figures
+*.tiff
+*.pdf
+
+# ignore files
+*.csv
+*.txt
+*.pdf
+
+# ignore data
+*.rds
+*.Rda
+*.RData
