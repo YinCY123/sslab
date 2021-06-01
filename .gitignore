@@ -11,6 +11,5 @@
 *.pdf
 
 # ignore data
-*.rds
 *.Rda
 *.RData
