@@ -14,14 +14,15 @@ library(tidygraph)
 library(tidyverse)
 library(ggraph)
 library(igraph)
+library(EnsDb.Mmusculus.v79)
 ```
 
 # Pdgfr downstream signals
 ```{r}
 # all_path_df <- read.csv(file = "../res/P2ry12/all_pathways_df.csv", 
 #                         stringsAsFactors = F)
-all_path_df <- readRDS("../data/KEGG/KEGG_pathways_formatted.rds")
-names_to_display <- readRDS("../data/KEGG/names_to_display.rds")
+all_path_df <- readRDS("../P2y12r-and-C1q/data/KEGG/KEGG_pathways_formatted.rds")
+names_to_display <- readRDS("../P2y12r-and-C1q/data/KEGG/names_to_display.rds")
 
 all_path_df %>% dim()
 all_path_df %>% pull(type) %>% table()
@@ -48,8 +49,13 @@ all_path_df %>% head()
 ```{r}
 ig <- graph_from_data_frame(d = all_path_df, directed = T)
 
+mapIds(EnsDb.Mmusculus.v79, 
+       keys = c("Pdgfra", "Pdgfrb", "Pdgfrc"), 
+       keytype = "SYMBOL", 
+       column = "ENTREZID")
+
 spath_Pdgfr <- shortest_paths(ig, 
-                            from = V(ig)$name %in% c("18596", "68797"),
+                            from = V(ig)$name %in% c("18596"),
                             output = "epath", 
                             mode = "out") %>% 
   .$epath
