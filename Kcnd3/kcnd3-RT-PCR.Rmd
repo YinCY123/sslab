@@ -1,0 +1,210 @@
+---
+title: "kcnd3"
+author: "yincy"
+date: "1/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(readxl)
+library(tidyverse)
+```
+
+
+# 20210116  
+```{r}
+tf20210116 <- read_xlsx("20210116/20210116 - summary.xlsx")
+```
+
+```{r}
+set.seed(122)
+tf20210116 %>% 
+    dplyr::filter(!(gene == "actin")) %>% 
+    ggplot(aes(gene, `2ddCt`)) +
+    geom_jitter(aes(color = group, shape = factor(sample)), width = 0.25) +
+    scale_shape_discrete(name = "sample") +
+    theme_classic() +
+    scale_x_discrete(name = NULL) +
+    scale_y_continuous(name = "2^-ddCt") +
+    scale_color_discrete(name = "treatment", labels = c("C" = "Control", "KD" = "Knockdown"))
+```
+
+```{r}
+ggsave("TF-expression.tiff")
+```
+
+
+# 20210224
+```{r}
+tf20210224 <- read_xlsx("20210224/20210224 - summary.xlsx", sheet = 2)
+```
+
+```{r}
+set.seed(123)
+tf20210224 %>% 
+    filter(!is.na(ddCt), Sample %in% c(1, 2, 3)) %>% 
+    as_tibble() %>% 
+    mutate(
+        Sample = factor(Sample), 
+        Group = factor(Group), 
+        Gene = factor(Gene)) %>% 
+    ggplot(aes(Gene, `2-ddCt`)) +
+    geom_jitter(aes(color = Group, shape = Sample), width = 0.2) +
+    scale_x_discrete(name = NULL, labels = NULL) +
+    scale_y_continuous(name = NULL) +
+    facet_wrap(.~ Gene, scales = "free")
+```
+
+```{r}
+ggsave("20210224/Kcnd3-TF-20210224.tiff")
+```
+
+
+# 20210328
+```{r}
+tf20210328 <- readxl::read_xlsx("20210328/20210328 - summary.xlsx", 
+                                sheet = 2)
+
+tf20210328 %>% 
+    filter(!is.na(`2-ddCt`), Sample %in% c(2, 3, 4), average <= 31) %>% 
+    mutate(Sample = factor(Sample, levels = c(4, 2, 3), labels = c(1, 2, 3)), 
+           Group = factor(Group, levels = c("ctl", "kd"))) %>% 
+    ggplot(aes(Gene, `2-ddCt`)) +
+    geom_jitter(aes(color = Group, shape = Sample), width = 0.2) +
+    scale_x_discrete(name = NULL, labels = NULL) +
+    scale_y_continuous(name = NULL) +
+    facet_wrap(.~ Gene, scales = "free") +
+    theme(axis.ticks.x = element_blank(), 
+          panel.background = element_rect(fill = "grey95"))
+
+ggsave("20210328/kcnd3-TF-20210328.pdf", device = cairo_pdf)
+```
+
+
+# 20210331
+```{r}
+tf20210331 <- readxl::read_xlsx("20210331/20210331 - summary.xlsx", 
+                                sheet = 2, 
+                                col_names = T)
+
+tf20210331 %>% 
+    filter(!is.na(`2-ddCt`), average <= 31) %>% 
+    mutate(Group = factor(Group, levels = c("ctl", "kd")), 
+           Sample = factor(Sample, levels = c(1, 2, 3))) %>% 
+    ggplot(aes(Gene, `2-ddCt`)) +
+    geom_jitter(aes(shape = Sample, color = Group), width = 0.2) +
+    scale_x_discrete(name = NULL, labels = NULL) +
+    scale_y_continuous(name = NULL) +
+    facet_wrap(.~Gene, scales = "free") +
+    theme(axis.ticks.x = element_blank())
+
+ggsave("20210331/kcnd3-TF-20210331.pdf", device = cairo_pdf)
+```
+
+
+combine 20210328 and 20210331
+```{r}
+tf20210328 <- tf20210328 %>% 
+    filter(!is.na(`2-ddCt`)) %>% 
+    mutate(Group = factor(Group, levels = c("ctl", "kd")), 
+           Sample = factor(Sample, levels = c(4, 2, 3), labels = c(1, 2, 3)))
+
+tf20210331 <- tf20210331 %>% 
+    filter(!is.na(`2-ddCt`)) %>% 
+    mutate(Group = factor(Group, levels = c("ctl", "kd")), 
+           Sample = factor(Sample, levels = c(1, 2, 3)))
+
+set.seed(111)
+tf20210328 %>% 
+    rbind(tf20210331) %>% 
+    filter(!is.na(average), average <= 31) %>% 
+    ggplot(aes(Gene, `2-ddCt`)) +
+    geom_jitter(aes(shape = Sample, color = Group), width = 0.3) +
+    scale_x_discrete(name = NULL, labels = NULL) +
+    scale_y_continuous(name = NULL) +
+    facet_wrap(.~Gene, scales = "free") +
+    theme(axis.ticks.x = element_blank())
+
+ggsave('20210331/kcnd3-TF-20210328-20210331-combined.pdf', device = cairo_pdf)
+```
+
+
+# 20210403  
+```{r, message=FALSE, warning=FALSE}
+geom_mean <- function(se = T){list(
+    stat_summary(fun = "mean", geom = "bar", fill = "grey70"),
+    if(se)
+        stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", width = 0.2)
+)}
+
+tf20210403 <- read_xlsx("20210403/20210403-summary.xlsx", 
+                        sheet = 2)
+
+tf20210403 %>% 
+    filter(!is.na(`2-ddCt`), average <= 31) %>% 
+    mutate(Group = factor(Group, levels = c("ctl", "kd")), 
+           Sample = factor(Sample, levels = c(1, 2, 3))) %>% 
+    ggplot(aes(Gene, `2-ddCt`, group = Group)) +
+    geom_jitter(aes(shape = Sample, col = Group), width = 0.1)
+```
+
+
+# 20210520
+```{r}
+tf20210520 <- readxl::read_xlsx("20210520/admin_2021-05-20 11-01-44_CT036373.xlsx", 
+                                sheet = 3)
+
+tf20210520 %>% 
+    filter(!is.na(dCt)) %>% 
+    group_by(Gene, Group) %>% 
+    mutate(mean = mean(`2^-ddCt`), 
+           sd = sd(`2^-ddCt`), 
+           se = sd / sqrt(3 - 1)) %>% 
+    distinct(Gene, Group, .keep_all = T) %>% 
+    ggplot(aes(Group, mean)) +
+    geom_bar(stat = "identity") +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = "dodge", width = 0.3) +
+    scale_x_discrete(name = NULL, labels = c("Catha + ctl-shRNA", "Catha + kd-shRNA")) +
+    scale_y_continuous(name = "relative expression") +
+    ggtitle("Pdgfra knockdown") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("20210520/Pdgfra.tiff", width = 10, height = 6.18)
+```
+
+
+# 20210529
+```{r}
+tf20210529 <- readxl::read_xlsx("20210529/summary.xlsx")
+
+tf20210529 %>% 
+    filter(!is.na(dCt)) %>% 
+    group_by(Gene, Group) %>% 
+    mutate(mean = mean(`2^-ddCt`), 
+           sd = sd(`2^-ddCt`), 
+           se = sd / sqrt(3 - 1), 
+           Gene = factor(Gene, levels = c("Pdgfra", "Kcnd3"))) %>% 
+    distinct(Gene, Group, .keep_all = T) %>% 
+    ggplot(aes(Group, mean)) +
+    geom_bar(stat = "identity") +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = "dodge", width = 0.3) +
+    scale_x_discrete(name = NULL, labels = c("Catha", "Catha + BV2", "Catha + ctl-shRNA + BV2" ,"Catha + kd-shRNA + BV2")) +
+    facet_wrap(~ Gene, scale = "free_y") +
+    theme_classic() +
+    ylab("relative expression") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5), 
+          strip.background = element_rect(linetype = 0), 
+          axis.text.x = element_text(angle = -40, hjust = 0))
+
+ggsave("20210529/Pdgfra-20210529.tiff", width = 10, height = 6.18)
+```
+
+
+
+
