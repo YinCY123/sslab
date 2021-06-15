@@ -180,7 +180,7 @@ ggsave("20210520/Pdgfra.tiff", width = 10, height = 6.18)
 
 # 20210529
 ```{r}
-tf20210529 <- readxl::read_xlsx("20210529/summary.xlsx")
+tf20210529 <- readxl::read_xlsx("e:/ZJU/data/RT-PCR/Kcnd3-TF/20210529/20210529-summary.xlsx")
 
 tf20210529 %>% 
     filter(!is.na(dCt)) %>% 
@@ -189,22 +189,50 @@ tf20210529 %>%
            sd = sd(`2^-ddCt`), 
            se = sd / sqrt(3 - 1), 
            Gene = factor(Gene, levels = c("Pdgfra", "Kcnd3"))) %>% 
-    distinct(Gene, Group, .keep_all = T) %>% 
+#    distinct(Gene, Group, .keep_all = T) %>% 
     ggplot(aes(Group, mean)) +
-    geom_bar(stat = "identity") +
+    geom_bar(stat = "identity", position = "dodge") +
     geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = "dodge", width = 0.3) +
     scale_x_discrete(name = NULL, labels = c("Catha", "Catha + BV2", "Catha + ctl-shRNA + BV2" ,"Catha + kd-shRNA + BV2")) +
+    geom_jitter(aes(x = Group, y = `2^-ddCt`), width = 0.15) +
     facet_wrap(~ Gene, scale = "free_y") +
     theme_classic() +
     ylab("relative expression") +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5), 
           strip.background = element_rect(linetype = 0), 
-          axis.text.x = element_text(angle = -40, hjust = 0))
+          axis.text.x = element_text(angle = -40, hjust = 0)) +
+    labs(subtitle = "with serum while transfection")
 
-ggsave("20210529/Pdgfra-20210529.tiff", width = 10, height = 6.18)
+ggsave("e:/ZJU/data/RT-PCR/Kcnd3-TF/20210529/Pdgfra-20210529.tiff", width = 10, height = 6.18)
 ```
 
 
+# 20210612
+```{r}
+tf20210612 <- readxl::read_xlsx("e:/ZJU/data/RT-PCR/Kcnd3-TF/20210612/admin_2021-06-12 13-17-58_CT036373.xlsx", 
+                                sheet = 2)
+
+tf20210612 %>% 
+    filter(!is.na(`-ddCt`), Group %in% c("Catha", "Catha + BV2"), Gene == "Pdgfra") %>% 
+    group_by(Group) %>% 
+    mutate(`2^-ddCt` = as.numeric(`2^-ddCt`),
+           mean = mean(`2^-ddCt`), 
+           sd = sd(`2^-ddCt`), 
+           se = sd/sqrt(3 - 1)) %>% 
+#    distinct(Group, .keep_all = T) %>% 
+    ggplot(aes(Group, mean)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_jitter(aes(x = Group, y = `2^-ddCt`), width = 0.15) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = "dodge", width = 0.25) +
+    scale_x_discrete(name = NULL) +
+    scale_y_continuous(name = "relative expression") +
+    labs(subtitle = "No serum while tranfection") +
+    facet_wrap(~ Gene, scales = "free_y") +
+    theme_classic() +
+    theme(strip.background = element_rect(linetype = 0)) 
+
+ggsave("e:/ZJU/data/RT-PCR/Kcnd3-TF/20210612/Pdgfra-20210612.tiff", width = 6.18, height = 10)
+```
 
 
