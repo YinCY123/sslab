@@ -10,10 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(org.Mm.eg.db)
+library(ggraph)
+library(tidygraph)
+library(igraph)
 library(stringr)
 library(stringr.plus)
+library(EnsDb.Mmusculus.v79)
+library(org.Mm.eg.db)
+library(tidyverse)
 ```
 
 # load data  
@@ -163,14 +167,7 @@ all_path_df %>% dim()
 all_path_df %>% head()
 ```
 
-
-
 # Visualization  
-```{r, message=FALSE, warning=FALSE}
-library(ggraph)
-library(tidygraph)
-library(igraph)
-```
 
 ```{r}
 pvn3_entrez <- mapIds(org.Mm.eg.db, 
@@ -216,6 +213,27 @@ spath_BS3 <- shortest_paths(ig,
                             output = "epath", 
                             mode = "out") %>% 
   .$epath
+
+# pathways between COP1 (RFWD2) and Cebpb
+
+mapIds(EnsDb.Mmusculus.v79, 
+       keys = c("Cebpb", "Rfwd2", "P2ry12"), 
+       keytype = "SYMBOL", 
+       column = "ENTREZID")
+
+spath_Cop1_Cebpb <- shortest_paths(ig, 
+                                   from = V(ig)$name == "26374", 
+                                   to = V(ig)$name == "12608", 
+                                   mode = "all", 
+                                   output = "epath") %>% 
+  .$epath
+
+spath_p2ry12_Cop1_Cebpb <- shortest_paths(ig, 
+                                          from = V(ig)$name == "70839", 
+                                          to = V(ig)$name %in% c("12608", "26374"), 
+                                          mode = "all", 
+                                          output = "epath") %>% 
+  .$epath
 ```
 
 
@@ -246,6 +264,28 @@ spath_df_BS3 <- spath_BS3 %>%
   magrittr::set_colnames("from_to") %>% 
   separate(col = "from_to", into = c("from", "to"), sep = "\\|") %>% 
   distinct(from, to)
+
+# pathways between COP1 and Cebpb
+spath_Cop1_Cebpb_df <- spath_Cop1_Cebpb %>% 
+  sapply(as_ids) %>% 
+  lapply(as.matrix) %>% 
+  unlist %>% 
+  as.data.frame() %>% 
+  magrittr::set_colnames("from_to") %>% 
+  separate(col = "from_to", into = c("from", "to"), sep = "\\|") %>% 
+  distinct(from, to)
+
+spath_p2ry12_Cop1_Cebpb_df <- spath_p2ry12_Cop1_Cebpb %>% 
+  sapply(as_ids) %>% 
+  lapply(as.matrix) %>% 
+  unlist %>% 
+  as.data.frame() %>% 
+  magrittr::set_colnames("from_to") %>% 
+  separate(col = "from_to", into = c("from", "to")) %>% 
+  distinct(from, to)
+
+# combine the two 
+p2ry12_cop1_Cebpb <- rbind(spath_Cop1_Cebpb_df, spath_p2ry12_Cop1_Cebpb_df) %>% distinct(from, to)
 ```
 
 
@@ -257,6 +297,12 @@ spath_df_BS3_KEGG <- left_join(spath_df_BS3, all_path_df, by = c("from" = "from"
   distinct(from, to, .keep_all = T)
 
 spath_df_CTX3_KEGG <- left_join(spath_df_CTX3, all_path_df, by = c("from" = "from", "to" = "to")) %>% 
+  distinct(from, to, .keep_all = T)
+
+# pathways between COP1 and Cebpb
+p2ry12_cop1_Cebpb_df <- left_join(p2ry12_cop1_Cebpb, 
+                                 all_path_df, 
+                                 by = c("from" = "from", "to" = "to")) %>% 
   distinct(from, to, .keep_all = T)
 ```
 
@@ -297,6 +343,21 @@ N_CTX3 <- tibble(
 E_CTX3 <- spath_df_CTX3_KEGG
 ```
 
+downstream of Mapk1, Mapk11, Pik3ca, Pla2g4b, Pla2g4a
+```{r}
+tg <- as_tbl_graph(all_path_df)
+
+filtered <- tg %>% 
+  mutate(ids = name,
+         dist_mapk11 = bfs_dist(root = .N()$name == "19094", mode = "out"), 
+         dist_mapk1 = bfs_dist(root = .N()$name == "26413", mode = "out"), 
+         dist_Pla2g4a = bfs_dist(root = .N()$name == "18783", mode = "out"), 
+         dist_Pla2g4b = bfs_dist(root = .N()$name == "211429", mode = "out"), 
+         dist_pik3ca = bfs_dist(root = .N()$name == "18706", mode = "out"),
+         name = names_to_display[ids]) %>% 
+  filter(dist_mapk11 <= 2 & dist_mapk1 <= 2 & dist_Pla2g4a <= 2 & dist_Pla2g4b <= 2 & dist_pik3ca <= 2)
+```
+
 
 combine the graph  
 ```{r}
@@ -329,6 +390,11 @@ df %>%
 g_pvn3 <- tbl_graph(nodes = N_pvn3, edges = E_pvn3, directed = T)
 g_BS3 <- tbl_graph(nodes = N_BS3, edges = E_BS3, directed = T)
 g_CTX3 <- tbl_graph(nodes = N_CTX3, edges = E_CTX3, directed = T)
+
+## pathways between COP1 and Cebpb
+g_Cop1_Cebpb <- tbl_graph(nodes = data.frame(ids = unique(c(p2ry12_cop1_Cebpb_df$from, p2ry12_cop1_Cebpb_df$to))), 
+                          edges = p2ry12_cop1_Cebpb_df, 
+                          directed = T)
 ```
 
 ```{r, warning=F, message=F}
@@ -432,6 +498,34 @@ ggsave("../res/P2ry12/20210303-CTX3.pdf")
 combine all pathways
 ```{r, message=FALSE, warning=FALSE}
 g <- tbl_graph(nodes = N, edges = E, directed = T)
+g <- g %>% mutate(name = names_to_display[ids])
+
+end_cap <- 2
+start_cap <- 2
+arrow_len <- 1
+
+graph_join(g, filtered, by = c("name" = "name", "ids" = "ids")) %>% 
+  select(-starts_with("dist")) %>% 
+  activate(edges) %>% 
+  mutate(lty = factor(lty)) %>% 
+  ggraph(layout = "lgl") +
+  geom_edge_link(aes(filter = (angle == 30), 
+                     edge_linetype = lty, 
+                     label = edge_label), 
+                 end_cap = circle(end_cap, "mm"), 
+                 start_cap = circle(start_cap, "mm"), 
+                 arrow = arrow(length = unit(arrow_len, "mm"))) +
+  geom_edge_link(aes(filter = (angle == 90), 
+                     edge_linetype = lty, 
+                     label = edge_label),
+                 end_cap = circle(end_cap, "mm"), 
+                 start_cap = circle(start_cap, "mm"), 
+                 arrow = arrow(angle = 90, length = unit(arrow_len, "mm"))) +
+  geom_node_point(aes(shape = shape), size = 3, col = "grey80") +
+  geom_node_text(aes(label = name), size = 3) +
+  scale_edge_linetype_manual(values = c("1" = "solid", "3" = "longdash", "5" = "dotdash")) +
+  guides(edge_linetype = "none", shape = "none") +
+  theme_graph()
 ```
 
 ```{r, message=FALSE, warning=FALSE}
@@ -564,6 +658,40 @@ g %>%
 ggsave("../res/p2ry12_downstream_signal_CTX3_combined_20210327.pdf", device = cairo_pdf)
 ```
 
+```{r}
+## pathways between COP1 and Cebpb
+
+set.seed(123)
+g_Cop1_Cebpb %>% 
+  mutate(name = names_to_display[ids]) %>% 
+  activate(edges) %>% 
+  mutate(lty = factor(lty)) %>% 
+  ggraph(layout = "nicely") +
+  geom_edge_link(aes(filter = (angle == 30), 
+                     edge_linetype = lty, 
+                     label = .E()$subtype),
+                 end_cap = circle(5, "mm"), 
+                 start_cap = circle(1, "mm"), 
+                 arrow = arrow(length = unit(2, "mm")), 
+                 label_size = 2, 
+                 angle_calc = "along", 
+                 label_dodge = unit(2.5, "mm")) +
+  geom_edge_link(aes(filter = (angle == 90),
+                     edge_linetype = lty,
+                     label = .E()$subtype),
+                 end_cap = circle(5, "mm"),
+                 start_cap = circle(1, "mm"),
+                 arrow = arrow(angle = 90, length = unit(2, "mm")),
+                 label_size = 3,
+                 angle_calc = "along",
+                 label_dodge = unit(2.5, "mm")) +
+  geom_node_point(size = 10, color = "grey70") +
+  geom_node_text(aes(label = names_to_display[.N()$ids]), size = 2, color = "black") +
+  scale_edge_linetype_manual(values = c("1" = "solid", "5" = "dashed")) +
+  guides(edge_linetype = "none") +
+  theme_graph()
+ggsave("f:/git/sslab/P2y12r-and-C1q/res/P2ry12/Cop1_Cebpb_path.tiff")
+```
 
 
 # number of DEGs in different orders  
@@ -571,7 +699,7 @@ ggsave("../res/p2ry12_downstream_signal_CTX3_combined_20210327.pdf", device = ca
 tg <- as_tbl_graph(all_path_df)
 
 DEG_3_orders <- tg %>% 
-  dplyr::mutate(dfsr = bfs_dist(root = .N()$name == "70839", mode = "out")) %>% 
+  dplyr::mutate(dfsr = bfs_dist(root = .N()$name == "70839", mode = "out")) %>% as.data.frame()
   dplyr::filter(.N()$name %in% intersect(mapIds(org.Mm.eg.db, as.character(pvn_DEGs_A3), "ENTREZID", "SYMBOL"), 
                                   mapIds(org.Mm.eg.db, as.character(pvn_DEGs_L3), "ENTREZID", "SYMBOL"))) %>% 
   as_tibble() %>% 
@@ -625,5 +753,7 @@ DEG_3_orders %>%
 
 ggsave(filename = "../res/P2ry12/Number-of-DEGs-in-different-order.tiff")
 ```
+
+
 
 
