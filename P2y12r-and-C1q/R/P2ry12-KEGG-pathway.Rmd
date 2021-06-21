@@ -366,7 +366,7 @@ mapk1_downstream <- tg %>%
          names = names_to_display[ids], 
          dist_mapk1 = bfs_dist(.N()$ids == "26413", mode = "out")) %>% 
   select(-name) %>% 
-  filter(dist_mapk1 <= dist) %>% 
+  dplyr::filter(dist_mapk1 <= dist) %>% 
   arrange(dist_mapk1)
 
 pik3ca_downstream <- tg %>% 
@@ -399,6 +399,13 @@ joined <- pla2g4a_downstream %>%
   graph_join(mapk11_downstream, by = c("ids" = "ids", "names" = "names")) %>% 
   graph_join(pik3ca_downstream, by = c("ids" = "ids", "names" = "names"))
 
+```
+
+
+```{r}
+pla2g4b_downstream %>% 
+  as.data.frame() %>% 
+  write.xlsx(file = "../res/P2ry12/downstream_genes.xlsx", sheetName = "pla2g4b", append = T)
 ```
 
 
