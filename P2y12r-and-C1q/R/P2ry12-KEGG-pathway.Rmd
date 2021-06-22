@@ -121,10 +121,107 @@ CTX3_common_down_genes <- readxl::read_xlsx("../data/20201204_common/20201204_ge
                                            sheet = "CTX_3") %>% 
   pull(down_CTX_3) %>% 
   as.character()
+
+
+degs <- c(pvn3_common_up_genes, pvn3_common_down_genes, 
+          BS3_common_up_genes, BS3_common_down_genes, 
+          CTX3_common_up_genes, BS3_common_down_genes)
+
+"Cop1" %in% degs %>% sort()
 ```
 
 
-## Veen  
+# DEG file from weibo
+```{r}
+tpm_20201113 <- read.table("../data/20201113_frame_tpm BO.csv", 
+                           row.names = 1, 
+                           header = T, 
+                           sep = ",")
+
+# remove 14 day data
+tpm_20201113 <- tpm_20201113 %>% 
+  select(-contains("_14"))
+
+# filter out low expressed genes
+bs_filter_index <- tpm_20201113[, grep("^BS", colnames(tpm_20201113))] %>% 
+  apply(1, FUN = function(x){sum(x > 0.5) > 4})
+ctx_filter_index <- tpm_20201113[, grep("^CTX", colnames(tpm_20201113))] %>% 
+  apply(1, FUN = function(x){sum(x > 0.5) > 4})
+pvn_filter_index <- tpm_20201113[, grep("^PVN", colnames(tpm_20201113))] %>% 
+  apply(1, FUN = function(x){sum(x > 0.5) > 4})
+
+filter_index <- bs_filter_index | ctx_filter_index | pvn_filter_index
+tpm_20201113 <- tpm_20201113[filter_index, ]
+
+# get sample index
+BS_naive_index <- grep("^BS_Naive[0-9]{1}", colnames(tpm_20201113), value = T)
+BS_3L_index <- grep("^BS_3L[0-9]{1}", colnames(tpm_20201113), value = T)
+BS_3A_index <- grep("^BS_3A[0-9]{1}", colnames(tpm_20201113), value = T)
+
+CTX_naive_index <- grep("^CTX_Naive[0-9]{1}", colnames(tpm_20201113), value = T)
+CTX_3L_index <- grep("^CTX_3L[0-9]{1}", colnames(tpm_20201113), value = T)
+CTX_3A_index <- grep("^CTX_3A[0-9]{1}", colnames(tpm_20201113), value = T)
+
+PVN_naive_index <- grep("^PVN_Naive[0-9]{1}", colnames(tpm_20201113), value = T)
+PVN_3L_index <- grep("^PVN_3L[0-9]{1}", colnames(tpm_20201113), value = T)
+PVN_3A_index <- grep("^PVN_3A[0-9]{1}", colnames(tpm_20201113), value = T)
+
+# differential expressed genes based on fold change
+tpm_20201113 <- tpm_20201113 %>% 
+  rowwise() %>% 
+  mutate(mean_BS_naive = mean(c(BS_Naive1, BS_Naive1, BS_Naive3), na.rm = T), 
+         mean_BS_3L = mean(c(BS_3L3, BS_3L4, BS_3L5), na.rm = T), 
+         mean_BS_3A = mean(c(BS_3A5, BS_3A6, BS_3A7), na.rm = T), 
+         mean_CTX_naive = mean(c(CTX_Naive1, CTX_Naive2, CTX_Naive3), na.rm = T), 
+         mean_CTX_3L = mean(c(CTX_3L2, CTX_3L3, CTX_3L4), na.rm = T), 
+         mean_CTX_3A = mean(c(CTX_3A2, CTX_3A3, CTX_3A4), na.rm = T), 
+         mean_PVN_naive = mean(c(PVN_Naive1, PVN_Naive2, PVN_Naive3), an.rm = T), 
+         mean_PVN_3L = mean(c(PVN_3L1_b1, PVN_3L2_b1, PVN_3L3), na.rm = T), 
+         mean_PVN_3A = mean(c(PVN_3A1_b1, PVN_3A2, PVN_3A3_b1)), 
+         flc_BS_3L = (mean_BS_3L / mean_BS_naive) %>% round(digits = 3), 
+         flc_BS_3A = (mean_BS_3A / mean_BS_naive) %>% round(digits = 3), 
+         flc_CTX_3L = (mean_CTX_3L / mean_CTX_naive) %>% round(digits = 3), 
+         flc_CTX_3A = (mean_CTX_3A / mean_CTX_naive) %>% round(digits = 3), 
+         flc_PVN_3L = (mean_PVN_3L / mean_PVN_naive) %>% round(digits = 3), 
+         flc_PVN_3A = (mean_PVN_3A / mean_PVN_naive) %>% round(digits = 3))
+
+BS_common_up <- tpm_20201113 %>% 
+  filter(flc_BS_3A >= 2 & flc_BS_3L >= 2) %>% 
+  pull(geneid_symbol) %>% 
+  unique()
+BS_common_down <- tpm_20201113 %>% 
+  filter(flc_BS_3A <= 0.5 & flc_BS_3L <= 0.5) %>% 
+  pull(geneid_symbol) %>% 
+  unique()
+
+CTX_common_up <- tpm_20201113 %>% 
+  filter(flc_CTX_3A >= 2, flc_CTX_3L >= 2) %>% 
+  pull(geneid_symbol) %>% 
+  unique()
+CTX_common_down <- tpm_20201113 %>% 
+  filter(flc_CTX_3A <= 0.5 & flc_CTX_3L <= 0.5) %>% 
+  pull(geneid_symbol) %>% 
+  unique()
+
+PVN_common_up <- tpm_20201113 %>% 
+  filter(flc_PVN_3A >=2 & flc_PVN_3L >= 2) %>% 
+  pull(geneid_symbol) %>% 
+  unique()
+PVN_common_down <- tpm_20201113 %>% 
+  filter(flc_PVN_3A <= 0.5 & flc_PVN_3L <= 0.5) %>% 
+  pull(geneid_symbol) %>% 
+  unique()
+```
+
+
+```{r}
+tpm_20201113 %>% 
+  filter(geneid_symbol %in% c("Cop1", "Cebpb", "P2ry12", "Mapk11", "Mapk1", "Trp53")) %>%
+  write.csv(file = "../res/P2ry12/flc.csv")
+```
+
+
+## Veen   
 ```{r}
 # library(VennDiagram)
 # ?venn.diagram
@@ -169,27 +266,25 @@ all_path_df %>% head()
 
 
 # Visualization  
-
 ```{r}
 pvn3_entrez <- mapIds(org.Mm.eg.db, 
-                      keys = c(pvn3_common_down_genes, pvn3_common_up_genes), 
+                      keys = c(PVN_common_down, PVN_common_up), 
                       keytype = "SYMBOL", 
                       column = "ENTREZID") %>% 
   na.omit() %>% 
   as.character()
 
 CTX3_entrez <- mapIds(org.Mm.eg.db, 
-                      keys = c(CTX3_common_down_genes, CTX3_common_up_genes), 
+                      keys = c(CTX_common_down, CTX_common_up), 
                       keytype = "SYMBOL", 
                       column = "ENTREZID") %>% 
   na.omit() %>% 
   as.character()
 
 BS3_entrez <- mapIds(org.Mm.eg.db, 
-                    keys = c(BS3_common_down_genes, BS3_common_up_genes), 
+                    keys = c(BS_common_down, BS_common_up), 
                     keytype = "SYMBOL", 
                     column = "ENTREZID")
-
 
 
 ig <- graph_from_data_frame(d = all_path_df, directed = T)
@@ -351,7 +446,7 @@ tg <- as_tbl_graph(all_path_df)
 
 gs <- c("Mapk1", "Mapk11", "Pik3ca", "Pla2g4b", "Pla2g4a")
 names_to_display[names_to_display %in% gs]
-dist <- 3
+dist <- 2
 
 mapk11_downstream <- tg %>% 
   mutate(ids = name,  
@@ -359,15 +454,22 @@ mapk11_downstream <- tg %>%
          dist_mapk11 = bfs_dist(.N()$ids == "19094", mode = "out")) %>% 
   select(-name) %>% 
   filter(dist_mapk11 <= dist) %>% 
-  arrange(dist_mapk11)
+  arrange(dist_mapk11) %>% 
+  filter(!node_is_isolated()) %>% 
+  activate(edges) %>% 
+  filter(!edge_is_loop())
 
 mapk1_downstream <- tg %>% 
   mutate(ids = name, 
          names = names_to_display[ids], 
          dist_mapk1 = bfs_dist(.N()$ids == "26413", mode = "out")) %>% 
   select(-name) %>% 
-  dplyr::filter(dist_mapk1 <= dist) %>% 
-  arrange(dist_mapk1)
+  filter(dist_mapk1 <= dist) %>% 
+  arrange(dist_mapk1) %>% 
+  filter(!node_is_isolated()) %>% 
+  activate(edges) %>% 
+  filter(!edge_is_loop())
+
 
 pik3ca_downstream <- tg %>% 
   mutate(ids = name, 
@@ -375,15 +477,21 @@ pik3ca_downstream <- tg %>%
          dist_pik3ca = bfs_dist(.N()$ids == "18706", mode = "out")) %>% 
   select(-name) %>% 
   filter(dist_pik3ca <= dist) %>% 
-  arrange(dist_pik3ca)
+  arrange(dist_pik3ca) %>% 
+  filter(!node_is_isolated()) %>% 
+  activate(edges) %>% 
+  filter(!edge_is_loop())
 
 pla2g4a_downstream <- tg %>% 
   mutate(ids = name, 
          names = names_to_display[ids], 
          dist_pla2g4a = bfs_dist(.N()$ids == "18783", mode = "out")) %>% 
   select(-name) %>% 
-  filter(dist_pla2g4a <= dist) %>% arrange(dist_pla2g4a) %>% 
-  arrange(dist_pla2g4a)
+  filter(dist_pla2g4a <= dist) %>% 
+  arrange(dist_pla2g4a) %>% 
+  filter(!node_is_isolated()) %>% 
+  activate(edges) %>% 
+  filter(!edge_is_loop())
 
 pla2g4b_downstream <- tg %>% 
   mutate(ids = name, 
@@ -391,14 +499,16 @@ pla2g4b_downstream <- tg %>%
          dist_pla2g4b = bfs_dist(.N()$ids == "211429", mode = "out")) %>% 
   select(-name) %>% 
   filter(dist_pla2g4b <= dist) %>% 
-  arrange(dist_pla2g4b)
+  arrange(dist_pla2g4b) %>% 
+  filter(!node_is_isolated()) %>% 
+  activate(edges) %>% 
+  filter(!edge_is_loop())
 
 joined <- pla2g4a_downstream %>% 
   graph_join(pla2g4b_downstream, by = c("ids" = "ids", "names" = "names")) %>% 
   graph_join(mapk1_downstream, by = c("ids" = "ids", "names" = "names")) %>% 
   graph_join(mapk11_downstream, by = c("ids" = "ids", "names" = "names")) %>% 
   graph_join(pik3ca_downstream, by = c("ids" = "ids", "names" = "names"))
-
 ```
 
 
@@ -548,8 +658,11 @@ ggsave("../res/P2ry12/20210303-CTX3.pdf")
 combine all pathways
 ```{r, message=FALSE, warning=FALSE}
 g <- tbl_graph(nodes = N, edges = E, directed = T)
-g <- g %>% mutate(names = names_to_display[ids], 
-                  dist_p2ry12 = bfs_dist(.N()$ids == "70839"))
+g <- g %>% 
+  filter(!node_is_isolated()) %>% 
+  activate(edges) %>% 
+  filter(!edge_is_loop()) %>% 
+  activate(nodes)
 
 full_graph <- graph_join(joined, g, by = c("ids" = "ids", "names" = "names"))
 full_graph <- full_graph %>% 
@@ -602,7 +715,7 @@ g %>%
   ) %>% 
   activate(edges) %>% 
   mutate(lty = factor(lty)) %>% 
-  ggraph(layout = "nicely") +
+  ggraph(layout = "treemap") +
   geom_edge_link(aes(filter = (angle == 30), 
                      edge_linetype = lty, 
                      label = edge_label), 
@@ -623,13 +736,13 @@ g %>%
                  end_cap = circle(2.5, "mm"), 
                  start_cap = circle(1, "mm"), 
                  edge_width = 0.1) +
-  geom_node_point(aes(shape = shape, color = ncol), size = 5) +
+  geom_node_point(aes(shape = shape, color = ncol), size = 2) +
   geom_node_text(aes(label = name), size = 1.2) +
   scale_color_manual(name = NULL, values = c("up" = "darkred", "down" = "darkblue", "not significant" = "grey")) +
   guides(edge_linetype = F, shape = F) +
   theme_graph()
 
-ggsave("../res/p2ry12_downstream_signal_pvn3_combined_20210327.pdf", device = cairo_pdf)
+ggsave("../res/p2ry12_downstream_signal_pvn3_combined_20210622.pdf", device = cairo_pdf)
 ```
 
 
