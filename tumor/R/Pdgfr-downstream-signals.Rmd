@@ -21,8 +21,8 @@ library(EnsDb.Mmusculus.v79)
 ```{r}
 # all_path_df <- read.csv(file = "../res/P2ry12/all_pathways_df.csv", 
 #                         stringsAsFactors = F)
-all_path_df <- readRDS("../P2y12r-and-C1q/data/KEGG/KEGG_pathways_formatted.rds")
-names_to_display <- readRDS("../P2y12r-and-C1q/data/KEGG/names_to_display.rds")
+all_path_df <- readRDS("../../P2y12r-and-C1q/data/KEGG/KEGG_pathways_formatted.rds")
+names_to_display <- readRDS("../../P2y12r-and-C1q/data/KEGG/names_to_display.rds")
 
 all_path_df %>% dim()
 all_path_df %>% pull(type) %>% table()
@@ -69,8 +69,9 @@ spath_df_Pdgfr <- spath_Pdgfr %>%
   separate(col = "from_to", into = c("from", "to"), sep = "\\|") %>% 
   distinct(from, to)
 
-spath_df_Pdgfr_KEGG <- left_join(spath_df_Pdgfr, all_path_df, by = c("from" = "from", "to" = "to")) %>% 
-  distinct(from, to, .keep_all  =T)
+spath_df_Pdgfr_KEGG <- left_join(spath_df_Pdgfr, all_path_df, 
+                                 by = c("from" = "from", "to" = "to")) %>% 
+  distinct(from, to, .keep_all = T)
 ```
 
 ```{r}
@@ -84,8 +85,6 @@ N <- data.frame(
 E <- spath_df_Pdgfr_KEGG
 
 g <- tbl_graph(nodes = N, edges = E, directed = T)
-
-?bfs_dist
 ```
 
 ```{r, message=FALSE}
@@ -95,7 +94,8 @@ g %>%
          ncol = ifelse(id %in% c("18596", "68797"), "tomato", "grey"), 
          name = names_to_display[id], 
          dist_pdgfrb = bfs_dist(root = .N()$name == "Pdgfrb", mode = "out")) %>% 
-  filter(!is.na(dist_pdgfrb), dist_pdgfrb < 3) %>% 
+  dplyr::filter(name == "Lrp1")
+  dplyr::filter(!is.na(dist_pdgfrb), dist_pdgfrb < 3) %>% 
   activate(edges) %>% 
   mutate(lty = factor(lty)) %>% 
   ggraph(layout = "nicely") +
@@ -125,9 +125,58 @@ g %>%
   geom_node_point(aes(shape = shape, color = ncol), size = 2) +
   geom_node_text(aes(label = name), size = 0.8) +
   scale_color_manual(name = NULL, values = c("tomato" = "tomato", "grey" = "grey")) +
-  guides(edge_linetype = F, shape = F, col = F) +
+  guides(edge_linetype = "none", shape = "none", col = "none") +
   theme_graph()
 
 ggsave("../../tumor-macrophage/Pdgfr-downstream-signal.pdf", width = 10, height = 10, limitsize = F)
 ```
+
+# Pdgfrb Lrp1
+```{r}
+Pdgfrb_Lrp1 <- shortest_paths(graph = ig, 
+                              from = V(ig)$name == "16971", 
+                              to = V(ig)$name == "18596", 
+                              mode = "all", 
+                              output = "epath") %>% 
+  .$epath
+
+
+spath_df_Pdgfrb_lrp1 <- Pdgfrb_Lrp1 %>% 
+  sapply(as_ids) %>% 
+  lapply(as.matrix) %>% 
+  unlist() %>% 
+  as.data.frame() %>% 
+  magrittr::set_colnames("from_to") %>% 
+  separate(col = "from_to", into = c("from", "to"), sep = "\\|") %>% 
+  distinct(from, to)
+
+spath_df_pdgfrb_lrp1_kegg <- left_join(spath_df_Pdgfrb_lrp1, all_path_df, 
+                                       by = c("from" = "from", "to" = "to")) %>% 
+  distinct(from, to, .keep_all = T)
+
+N <- data.frame(
+  id = c(spath_df_pdgfrb_lrp1_kegg$from, spath_df_pdgfrb_lrp1_kegg$to) %>% unique()
+) %>% 
+  mutate(
+    name = names_to_display[id], 
+    shape = ifelse(grepl("^cpd|^gl|^dr", id, ignore.case = T), 22, 21)
+  )
+
+E <- spath_df_pdgfrb_lrp1_kegg
+
+g <- tbl_graph(nodes = N, edges = E, directed = T, node_key = "id")
+```
+
+```{r}
+g %>% 
+  ggraph(layout = "nicely") +
+  geom_edge_link(arrow = arrow(length = unit(2, "mm")), 
+                 end_cap = circle(5, "mm")) +
+  geom_node_point(size = 10, color = "grey") +
+  geom_node_text(aes(label = name))
+```
+
+
+
+
 
