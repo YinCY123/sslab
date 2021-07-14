@@ -1,0 +1,138 @@
+---
+title: "live-image"
+author: "YinCY"
+date: "7/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+# 20210204
+```{r}
+li_20210204 <- read.csv("E:/ZJU/data/live-image/20210204/210204 - ROI-statistics.csv")
+```
+
+```{r}
+set.seed(117)
+li_20210204 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Total.Flux..p.s.), 
+         sd = sd(Total.Flux..p.s.),
+         se = sd/sqrt(3-1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.4) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Total.Flux..p.s.), size = 2, width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "total flux") +
+  theme_classic()
+
+ggsave("e:/ZJU/data/live-image/20210204/20210204-live-image.tiff", 
+       width = 5, height = 7)
+```
+
+
+# 20210222
+```{r}
+li_20210222 <- read.csv("e:/ZJU/data/live-image/20210222/20210222 - ROI - stat.csv")
+```
+
+```{r}
+li_20210222 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Total.Flux..p.s.), 
+         sd = sd(Total.Flux..p.s.), 
+         se = sd/sqrt(3-1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.4) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Total.Flux..p.s.), size = 2, width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Total Flux") +
+  theme_classic()
+
+ggsave("e:/ZJU/data/live-image/20210222/20210222-live-image.tiff", 
+       width = 5, height = 7)
+```
+
+
+# 20210531
+```{r}
+li_20210531_KP_B6 <- read.csv("e:/ZJU/data/live-image/20210531/20210531-KP-B6/KP-B6-STAT.csv")
+li_20210531_PB3 <- read.csv("e:/ZJU/data/live-image/20210531/20210531-PB3/pb3-STAT.csv")
+```
+
+```{r}
+p1 <- li_20210531_KP_B6 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Total.Flux..p.s.), 
+         sd = sd(Total.Flux..p.s.), 
+         se = ifelse(group == "TAM", sd/sqrt(4-1), sd/sqrt(3-1))) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", position = "dodge", width = 0.4) +
+  geom_errorbar(aes(x = group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Total.Flux..p.s.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Total Flux") +
+  ggtitle(label = "KP-B6")
+
+p2 <- li_20210531_PB3 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Total.Flux..p.s.), 
+         sd = sd(Total.Flux..p.s.), 
+         se = ifelse(group == "TAM", sd/sqrt(5-1), sd/sqrt(6-1))) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Total.Flux..p.s.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Total Flux") +
+  ggtitle("PB3")
+```
+
+```{r}
+library(patchwork)
+
+p1 + p2
+
+ggsave("e:/ZJU/data/live-image/20210531/20210531-live-image.tiff")
+```
+
+
+# 20210702
+```{r}
+li_20210702 <- read.csv("e:/ZJU/data/live-image/20210702/20210702-PB3-stats.csv")
+```
+
+```{r}
+li_20210702 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Total.Counts), 
+         sd = sd(Total.Counts), 
+         se = sd/sqrt(2-1)) %>% 
+  ggplot()+
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Total.Counts), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Total Counts")
+
+ggsave("e:/ZJU/data/live-image/20210702/20210702-live-image.tiff", 
+       width = 5, height = 7)
+```
+
+
+
+
+
+
