@@ -32,7 +32,8 @@ li_20210204 %>%
   geom_jitter(aes(group, Total.Flux..p.s.), size = 2, width = 0.1) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "total flux") +
-  theme_classic()
+  theme_classic() +
+  ggtitle("PB3")
 
 ggsave("e:/ZJU/data/live-image/20210204/20210204-live-image.tiff", 
        width = 5, height = 7)
@@ -56,7 +57,8 @@ li_20210222 %>%
   geom_jitter(aes(group, Total.Flux..p.s.), size = 2, width = 0.1) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "Total Flux") +
-  theme_classic()
+  theme_classic() +
+  ggtitle("PB3")
 
 ggsave("e:/ZJU/data/live-image/20210222/20210222-live-image.tiff", 
        width = 5, height = 7)
@@ -125,7 +127,8 @@ li_20210702 %>%
   geom_jitter(aes(group, Total.Counts), width = 0.1, size = 2) +
   theme_classic() +
   scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "Total Counts")
+  scale_y_continuous(name = "Total Counts") +
+  ggtitle("PB3")
 
 ggsave("e:/ZJU/data/live-image/20210702/20210702-live-image.tiff", 
        width = 5, height = 7)
