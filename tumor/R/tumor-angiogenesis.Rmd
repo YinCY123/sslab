@@ -32,6 +32,7 @@ cell_and_blood_derived <- c("Ifng", "Ifnk", "Ifnb1",
                             "Il12b", "Il18", "Serpinf1", 
                             "Plg", "F2", "Serpinc1", 
                             "Pf4")
+
 others <- c("Timp1", "Timp2", "Timp4", 
             "Timp3", "Lect1", "Hsd17b7", 
             "Hsd17b6", "Hsd17b1", "Hsd17b3",
