@@ -929,5 +929,73 @@ ggsave(filename = "../res/P2ry12/Number-of-DEGs-in-different-order.tiff")
 ```
 
 
+# migration
+```{r}
+p2ry12_downstream_genes <- c("Chac1", "Ltb4r1", "Mmp9", 
+                             "Hdc", "Zfp607a", "Mthfd2", 
+                             "Plat", "Fancg", "Pla2g4a", 
+                             "Cebpb", "Vkorc1")
+p2ry12_downstream_genes_entrez <- mapIds(org.Mm.eg.db, 
+                                         keys = p2ry12_downstream_genes, 
+                                         keytype = "SYMBOL", 
+                                         column = "ENTREZID")
+
+migration_genes <- c("Cd177", "Mmp9", "Lcn2", "Anxa1", "Enpp2")
+migration_genes_entrez <- mapIds(x = org.Mm.eg.db, 
+                                 keys = migration_genes, 
+                                 keytype = "SYMBOL", 
+                                 column = "ENTREZID")
+
+migration_paths <- shortest_paths(graph = ig, 
+                                  from = V(ig)$name %in% p2ry12_downstream_genes_entrez, 
+                                  to = V(ig)$name %in% migration_genes_entrez, 
+                                  mode = "all", 
+                                  output = "epath") %>% 
+  .$epath
+
+
+migration_path_df <- migration_paths %>% 
+  sapply(as_ids) %>% 
+  lapply(as.matrix) %>% 
+  unlist() %>% 
+  as.data.frame() %>% 
+  magrittr::set_colnames("from_to") %>% 
+  separate(col = "from_to", into = c("from", "to"), sep = "\\|") %>% 
+  distinct(from, to)
+
+migration_path_KEGG <- left_join(migration_path_df, all_path_df, 
+          by = c("from" = "from", "to" = "to"))
+
+N <- tibble(
+  ids = c(migration_path_KEGG$from, migration_path_KEGG$to) %>% unique()
+) %>% 
+  mutate(
+    shape = ifelse(grepl("^cpd:|^gl:|^dr:", ids, ignore.case = F), "22", "21")
+  )
+
+E <- migration_path_KEGG
+
+tg_migration <- tbl_graph(nodes = N, edges = E, directed = T)
+
+set.seed(123)
+tg_migration %>% 
+  mutate(name = names_to_display[ids]) %>% 
+  activate(edges) %>% 
+  mutate(lty = factor(lty)) %>% 
+  ggraph(layout = "nicely") +
+  geom_edge_link(aes(filter = (angle == 30)), 
+                 start_cap = circle(1.5, "mm"),
+                 end_cap = circle(3, "mm"), 
+                 arrow = arrow(length = unit(2, "mm"))) +
+  geom_edge_link(aes(filter = (angle == 90)), 
+                 start_cap = circle(1.5, "mm"), 
+                 end_cap = circle(3, "mm"), 
+                 arrow = arrow(length = unit(1.5, "mm"), angle = 90)) +
+  geom_node_point(size = 5, color = "orange") +
+  geom_node_text(aes(label = name), size = 3)
+
+ggsave("../res/P2ry12/migration-20210805.tiff")
+```
+
 
 
