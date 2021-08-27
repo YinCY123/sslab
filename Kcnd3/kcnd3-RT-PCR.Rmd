@@ -263,4 +263,37 @@ ggsave("e:/ZJU/data/RT-PCR/Kcnd3-TF/20210703/Pdgfra-20210703.tiff")
 ```
 
 
+# 20210806
+```{r}
+pb3 <- read_xlsx(path = "e:/ZJU/data/RT-PCR/PB3/20210806/summary-20210806.xlsx")
+
+pb3 %>% 
+    filter(!is.na(dCt)) %>% 
+    group_by(Gene) %>% 
+    mutate(mean = mean(Ct), 
+           sd = sd(Ct), 
+           se = sd/sqrt(3-1)) %>% 
+    ggplot(aes(Gene, mean)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(x = Gene, ymin = mean - se, ymax = mean + se), width  = 0.3) +
+    scale_y_continuous(name = expression(Ct[Pdgf])) +
+    scale_x_discrete(name = NULL) +
+    geom_abline(intercept = 30, slope = 0, linetype = 2)
+ggsave("E:/ZJU/data/RT-PCR/PB3/20210806/PB3-PDGF-expression-Ct.tiff")
+
+
+pb3 %>% 
+    filter(!is.na(dCt)) %>% 
+    group_by(Gene) %>% 
+    mutate(mean = mean(dCt), 
+           sd = sd(dCt), 
+           se = sd/sqrt(3-1)) %>% 
+    ggplot(aes(Gene, mean)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(x = Gene, ymin = mean - se, ymax = mean + se), width  = 0.3) +
+    scale_y_continuous(name = expression(Ct[Pdgf] - Ct[GAPDH])) +
+    scale_x_discrete(name = NULL) 
+ggsave("E:/ZJU/data/RT-PCR/PB3/20210806/PB3-PDGF-expression-dCt.tiff")
+```
+
 
