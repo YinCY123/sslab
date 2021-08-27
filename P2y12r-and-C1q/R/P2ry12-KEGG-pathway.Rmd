@@ -933,7 +933,7 @@ ggsave(filename = "../res/P2ry12/Number-of-DEGs-in-different-order.tiff")
 ```{r}
 p2ry12_downstream_genes <- c("Chac1", "Ltb4r1", "Mmp9", 
                              "Hdc", "Zfp607a", "Mthfd2", 
-                             "Plat", "Fancg", "Pla2g4a", 
+                             "Plat", "Fancg", "Pla2g4b", 
                              "Cebpb", "Vkorc1")
 p2ry12_downstream_genes_entrez <- mapIds(org.Mm.eg.db, 
                                          keys = p2ry12_downstream_genes, 
@@ -946,12 +946,20 @@ migration_genes_entrez <- mapIds(x = org.Mm.eg.db,
                                  keytype = "SYMBOL", 
                                  column = "ENTREZID")
 
-migration_paths <- shortest_paths(graph = ig, 
-                                  from = V(ig)$name %in% p2ry12_downstream_genes_entrez, 
-                                  to = V(ig)$name %in% migration_genes_entrez, 
-                                  mode = "all", 
-                                  output = "epath") %>% 
-  .$epath
+migration_paths <- vector(mode = "list")
+
+for(i in p2ry12_downstream_genes_entrez){
+  x <- do.call(what = "shortest_paths", 
+          args = list(
+            graph = ig, 
+            from = V(ig)$name == i, 
+            to = V(ig)$name %in% migration_genes_entrez, 
+            mode = "out", 
+            output = "epath"
+          ))
+  x <- x$epath
+  migration_paths <- append(migration_paths, values = x)
+}
 
 
 migration_path_df <- migration_paths %>% 
@@ -960,8 +968,7 @@ migration_path_df <- migration_paths %>%
   unlist() %>% 
   as.data.frame() %>% 
   magrittr::set_colnames("from_to") %>% 
-  separate(col = "from_to", into = c("from", "to"), sep = "\\|") %>% 
-  distinct(from, to)
+  separate(col = "from_to", into = c("from", "to"), sep = "\\|")
 
 migration_path_KEGG <- left_join(migration_path_df, all_path_df, 
           by = c("from" = "from", "to" = "to"))
@@ -979,23 +986,91 @@ tg_migration <- tbl_graph(nodes = N, edges = E, directed = T)
 
 set.seed(123)
 tg_migration %>% 
-  mutate(name = names_to_display[ids]) %>% 
+  mutate(name = names_to_display[ids], 
+         ncol = ifelse(ids %in% migration_genes_entrez, "tomato", 
+                       ifelse(ids %in% p2ry12_downstream_genes_entrez, "blue", "gray"))) %>% 
   activate(edges) %>% 
   mutate(lty = factor(lty)) %>% 
   ggraph(layout = "nicely") +
-  geom_edge_link(aes(filter = (angle == 30)), 
+  geom_edge_link(aes(filter = (angle == 30), 
+                     label = subtype), 
                  start_cap = circle(1.5, "mm"),
                  end_cap = circle(3, "mm"), 
-                 arrow = arrow(length = unit(2, "mm"))) +
-  geom_edge_link(aes(filter = (angle == 90)), 
+                 arrow = arrow(length = unit(2, "mm")), 
+                 color = "gray40", 
+                 angle_calc = "along", 
+                 label_size = 1, 
+                 label_dodge = unit(1, "mm")) +
+  geom_edge_link(aes(filter = (angle == 90), 
+                     label = subtype), 
                  start_cap = circle(1.5, "mm"), 
                  end_cap = circle(3, "mm"), 
-                 arrow = arrow(length = unit(1.5, "mm"), angle = 90)) +
-  geom_node_point(size = 5, color = "orange") +
-  geom_node_text(aes(label = name), size = 3)
+                 arrow = arrow(length = unit(1.2, "mm"), angle = 90), 
+                 color = "gray40", 
+                 angle_calc = "along", 
+                 label_size = 1, 
+                 label_dodge = unit(1, "mm")) +
+  geom_node_point(aes(shape = shape, col = ncol), size = 6, show.legend = F) +
+  geom_node_text(aes(label = name), size = 2.5) +
+  scale_color_identity()
 
-ggsave("../res/P2ry12/migration-20210805.tiff")
+ggsave("../res/P2ry12/migration-20210807.tiff")
 ```
+
+
+# Calcium related pathway
+
+```{r}
+library(KEGGREST)
+listDatabases()
+
+mmu_pathways <- keggList(database = "pathway", organism = "mmu")
+mmu_pathways %>% class()
+grep("Calcium", mmu_pathways, ignore.case = T, value = T)
+
+pvn3_common_down_genes_entrez <- mapIds(org.Mm.eg.db, 
+                                        keys = pvn3_common_down_genes, 
+                                        keytype = "SYMBOL", 
+                                        column = "ENTREZID")
+
+pvn3_common_up_genes_entrez <- mapIds(org.Mm.eg.db, 
+                                      keys = pvn3_common_up_genes, 
+                                      keytype = "SYMBOL", 
+                                      column = "ENTREZID")
+library(pathview)
+pathview(gene.data = c(pvn3_common_down_genes_entrez, pvn3_common_up_genes_entrez) %>% unname() %>% unique() %>% na.omit() %>% as.character(), 
+         pathway.id = c("04020", "04961"), 
+         species = "mmu", 
+         gene.idtype = "KEGG")
+```
+
+
+# Piezo1
+```{r}
+names_to_display[which(names_to_display == "Piezo1")]
+```
+
+```{r}
+tg %>% 
+  mutate(ids = name, 
+         name = names_to_display[ids], 
+         dist = bfs_dist(root = .N()$name == "Piezo1", mode = "out")) %>% 
+  filter(.N()$name == "Piezo1")
+```
+
+
+```{r}
+listDatabases()
+keggLink("pathway", "br:234839")
+keggLink("mmu:234839")
+```
+
+```{r}
+pathview(gene.data = "234839", 
+         pathway.id = "22128", 
+         species = "ko")
+```
+
 
 
 
