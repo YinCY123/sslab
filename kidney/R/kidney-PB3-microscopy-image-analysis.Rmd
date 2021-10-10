@@ -1,0 +1,60 @@
+---
+title: "kidney-PB3-microscopy-image-analysis"
+author: "YinCY"
+date: "10/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(magrittr)
+library(ggplot2)
+```
+
+
+# kidney PB3 WT corn oil
+## plot profile
+### a-SMA and Pdgfrb
+```{r}
+# A-SMA
+asma <- read.csv("e:/ZJU/data/kidney/Tumor/PB3/kidney-PB3-WT-corn-oil/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/a-SMA-Plot-Profile-Values.csv")
+colnames(asma) <- c("distance_in_inches", "Gray_Value")
+
+df <- data.frame(x = c(12, 50), 
+                 y = c(10, 10), 
+                 label = c("normal tissue", "intra tumor"))
+
+asma %>% 
+  ggplot(aes(distance_in_inches, Gray_Value)) +
+  geom_path() + 
+  geom_smooth(color = "gray") +
+  labs(title = "a-SMA fluorencense intensity", x = "distance from margin (inche)", y = "fluorencense intensity") +
+  geom_segment(aes(x = 30, y = 100, xend = 30, yend = 5), linetype = 2, size = 0.5, color = "blue") +
+  geom_segment(aes(x = 35, y = 100, xend = 35, yend = 5), linetype = 2, size = 0.5, color = "blue") +
+  geom_label(data = df, aes(x = x, y = y, label = label)) +
+  theme_classic()
+
+ggsave("e:/ZJU/data/kidney/Tumor/PB3/kidney-PB3-WT-corn-oil/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/a-SMA-plot-profile.tiff", 
+       width = 10, height = 6.18)
+
+
+# Pdgfrb
+pdgfrb <- read.csv("e:/ZJU/data/kidney/Tumor/PB3/kidney-PB3-WT-corn-oil/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/Pdgfrb-Plot-Profile-Values.csv")
+colnames(pdgfrb) <- c("distance_in_inches", "Gray_Value")
+
+pdgfrb %>% 
+  ggplot(aes(distance_in_inches, Gray_Value)) +
+  geom_path() +
+  geom_smooth(color = "gray") +
+  labs(title = "Pdgfrb fluorescence intensity", x = "distance from margin (inch)", y = "fluorencense intensity") +
+  geom_segment(aes(x = 30, y = 250, xend = 30, yend = 5), linetype = 2, size = 0.5, color = "blue") +
+  geom_segment(aes(x = 35, y = 250, xend = 35, yend = 5), linetype = 2, size = 0.5, color = "blue") +
+  geom_label(data = df, aes(x = x, y = y, label = label)) +
+  theme_classic()
+```
+
+
+### vimentin and Pdgfrb
