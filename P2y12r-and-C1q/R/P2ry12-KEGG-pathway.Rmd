@@ -268,11 +268,12 @@ all_path_df %>% head()
 # Visualization  
 ```{r}
 pvn3_entrez <- mapIds(org.Mm.eg.db, 
-                      keys = c(PVN_common_down, PVN_common_up), 
+                      keys = c(pvn3_common_down_genes, pvn3_common_up_genes), 
                       keytype = "SYMBOL", 
                       column = "ENTREZID") %>% 
   na.omit() %>% 
-  as.character()
+  as.character() %>% 
+  unique()
 
 CTX3_entrez <- mapIds(org.Mm.eg.db, 
                       keys = c(CTX_common_down, CTX_common_up), 
@@ -1019,7 +1020,6 @@ ggsave("../res/P2ry12/migration-20210807.tiff")
 
 
 # Calcium related pathway
-
 ```{r}
 library(KEGGREST)
 listDatabases()
@@ -1044,32 +1044,79 @@ pathview(gene.data = c(pvn3_common_down_genes_entrez, pvn3_common_up_genes_entre
          gene.idtype = "KEGG")
 ```
 
-
-# Piezo1
+# Gca
 ```{r}
-names_to_display[which(names_to_display == "Piezo1")]
-```
+ig <- graph_from_data_frame(d = all_path_df, directed = T)
 
-```{r}
+names_to_display[which(names_to_display == "Calcium cation")]
+
+spath_pvn3 <- shortest_paths(graph = ig, 
+                        from = V(ig)[V(ig)$name == "cpd:C00076"], 
+                        to = V(ig)$name %in% pvn3_entrez, 
+                        output = "epath",
+                        mode = "all") %>% 
+  .$epath
+
+Gca_path_df <- spath_pvn3 %>% 
+  sapply(as_ids) %>% 
+  lapply(as.matrix) %>% 
+  unlist() %>% 
+  as.data.frame() %>% 
+  magrittr::set_colnames("from_to") %>% 
+  separate(col = "from_to", into = c("from", "to"), sep = "\\|")
+
+Gca_path_KEGG <- left_join(Gca_path_df, all_path_df, 
+                           by = c("from" = "from", "to" = "to"))
+
+N <- tibble(
+  ids = c(Gca_path_KEGG$from, Gca_path_KEGG$to) %>% unique()
+) %>% 
+  mutate(shape = ifelse(grepl("^cpd:|^gl:|^dr:", ids, ignore.case = F), "22", "21"))
+
+E <- Gca_path_KEGG
+
+tg <- tbl_graph(nodes = N, edges = E, directed = T)
+
+set.seed(123)
 tg %>% 
-  mutate(ids = name, 
-         name = names_to_display[ids], 
-         dist = bfs_dist(root = .N()$name == "Piezo1", mode = "out")) %>% 
-  filter(.N()$name == "Piezo1")
+  mutate(names = names_to_display[ids], 
+         ncol = ifelse(names %in% pvn3_common_up_genes, "tomato", 
+                       ifelse(names %in% pvn3_common_down_genes, "steelblue", 
+                              ifelse(names == "Gca", "gold", "gray")))) %>% 
+  ggraph(layout = "nicely") +
+  geom_edge_link(aes(filter = (angle == 30), label = subtype), 
+                 end_cap = circle(3, "mm"), 
+                 arrow = arrow(length = unit(1, "mm")),
+                 color = "gray40", 
+                 angle_calc = "along", 
+                 label_size = 0.7, 
+                 label_dodge = unit(1, "mm"), 
+                 edge_width = 0.1) +
+  geom_edge_link(aes(filter = (angle == 90), label = subtype), 
+                 end_cap = circle(3, "mm"), 
+                 arrow = arrow(length = unit(1, "mm"), angle = 90), 
+                 color = "gray40", 
+                 angle_calc = "along", 
+                 label_size = 0.7, 
+                 label_dodge = unit(1, "mm"), 
+                 edge_width = 0.1) +
+    geom_edge_link(aes(filter = is.na(angle), label = subtype), 
+                 end_cap = circle(3, "mm"), 
+                 arrow = arrow(length = unit(1, "mm")),
+                 color = "gray40", 
+                 angle_calc = "along", 
+                 label_size = 0.7, 
+                 label_dodge = unit(1, "mm"), 
+                 edge_width = 0.1) +
+  geom_node_point(aes(color = ncol, shape = shape), 
+                  size = 6, show.legend = F) +
+  geom_node_text(aes(label = names), size = 1) +
+  scale_color_identity()
+
+ggsave("../res/G.pdf")
 ```
 
 
-```{r}
-listDatabases()
-keggLink("pathway", "br:234839")
-keggLink("mmu:234839")
-```
-
-```{r}
-pathview(gene.data = "234839", 
-         pathway.id = "22128", 
-         species = "ko")
-```
 
 
 
