@@ -39,5 +39,48 @@ ggsave("/home/yincy/git/Data/kidney-single-cell/GSE107585/Cx3cr1-Cx3cl1-expressi
        width = 10, height = 6)
 ```
 
+```{r}
+sce.park <- readRDS("/home/yincy/git/Data/Kidney/GSE107585/sce.kidney-normalized.rds")
+
+colData(sce.park)
+```
+
+```{r}
+percent_mean_expression <- function(sce = sce, ...){
+    require(tidyverse)
+    require(viridis)
+    require(cowplot)
+
+        mean_expression <- sce[grepl("^PDGF", rownames(sce), ignore.case = T), ] %>% 
+            logcounts() %>% 
+            as.matrix() %>% 
+            apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = sce$celltype, FUN = mean)}) %>% 
+            as.data.frame() %>% 
+            rownames_to_column("cell") %>% 
+            gather(key = "Gene", value = "mean_expression", -cell)
+        
+        percent_expression <- sce[grepl("^PDGF", rownames(sce), ignore.case = T), ] %>% 
+            logcounts() %>% 
+            as.matrix() %>% 
+            apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = sce$celltype, FUN = function(x){mean(x > 0) * 100})}) %>% 
+            as.data.frame() %>% 
+            rownames_to_column("cell") %>% 
+            gather(key = "Gene", value = "percent_expression", -cell)
+        
+        plot <- left_join(mean_expression, 
+                  percent_expression, by = c("cell" = "cell", "Gene" = "Gene")) %>% 
+            ggplot(aes(Gene, cell)) +
+            geom_point(aes(size = percent_expression, color = mean_expression)) +
+            scale_x_discrete(name = NULL) +
+            scale_y_discrete(name = NULL) +
+            scale_color_viridis(option = "B") 
+        
+        print(plot)
+}
+
+
+percent_mean_expression(sce.park)
+ggsave("/home/yincy/git/Data/Kidney/GSE107585/expression-Pdgf-park.tiff")
+```
 
 
