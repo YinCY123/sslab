@@ -1,0 +1,23 @@
+---
+title: "GSE129798"
+author: "yincy"
+date: "7/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# adult deg
+```{r}
+library(DropletUtils)
+
+sample <- c("/home/yincy/git/Data/Kidney/GSE129798/Mouse_Adult_DGE/")
+sample_names <- c("adult.deg")
+
+sce.adult.deg <- read10xCounts(samples = sample)
+```
+
+

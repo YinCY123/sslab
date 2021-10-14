@@ -11,27 +11,100 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, message=FALSE}
 library(DropletUtils)
-library(scater)
-library(scran)
-library(tidyverse)
-```
 
-```{r}
-samples <- c("/home/yincy/git/Data/kidney/GSE145690/snctl/", 
-             "/home/yincy/git/Data/kidney/GSE145690/snctl2/", 
-             "/home/yincy/git/Data/kidney/GSE145690/snKO/", 
-             "/home/yincy/git/Data/kidney/GSE145690/snKO2/")
+samples <- c("/home/yincy/git/Data/Kidney/GSE145690/snctl/", 
+             "/home/yincy/git/Data/Kidney/GSE145690/snctl2/", 
+             "/home/yincy/git/Data/Kidney/GSE145690/snKO/", 
+             "/home/yincy/git/Data/Kidney/GSE145690/snKO2/")
 sample_names <- c("ctl1", "ctl2", "Grlh2-ko1", "Grlh2-ko2")
 
-sce.kidney <- read10xCounts(samples = samples, 
-                            sample.names = sample_names)
-
-sce.kidney <- quickCluster(x = sce.kidney, 
-                           method = "igraph")
+sce.kidney <- read10xCounts(samples = samples[c(1,3)], 
+                            sample.names = sample_names[c(1,3)])
 ```
 
 ```{r}
-colData(sce.kidney)
+e.out <- emptyDrops(m = counts(sce.kidney))
+table(e.out$FDR <= 0.001)
+table(e.out$FDR <= 0.001, e.out$Limited)
+
+amb <- metadata(e.out)$ambient[, 1, drop = T]
+sce.amb <- sce.kidney[names(amb), ]
+
+library(SingleR)
+library(BiocParallel)
+
+sce.kidney <- readRDS("/home/yincy/git/Data/Kidney/GSE145690/sce.hine.rds")
+sce.park <- readRDS("/home/yincy/git/Data/Kidney/GSE107585/sce.kidney-normalized.rds")
+rowData(sce.park)
 rowData(sce.kidney)
+
+pred.label <- SingleR(test = sce.kidney, 
+                      ref = sce.park, 
+                      labels = sce.park$celltype, 
+                      method = "wilcox", 
+                      de.n = 100, 
+                      aggr.ref = T, 
+                      aggr.args = list(power = 1/3, ntop = 2000), 
+                      assay.type.ref = "logcounts", 
+                      assay.type.test = "counts", 
+                      BPPARAM = MulticoreParam(8))
+pred.label$labels %>% table(useNA = "ifany")
+colData(sce.kidney)$celltype <- pred.label$labels
+saveRDS(sce.kidney, "/home/yincy/git/Data/Kidney/GSE145690/sce.kidney.rds")
 ```
+
+```{r}
+library(scran)
+library(scater)
+library(tidyverse)
+
+num_cells <- tapply(logcounts(sce.kidney[rownames(sce.kidney) == "Cx3cl1", ]), INDEX = sce.kidney$celltype, FUN = length)
+
+mean_expression_ctl <- sce.kidney[grepl("Cx3cl1", rownames(sce.kidney)), sce.kidney$Sample == "ctl1"] %>% 
+    .[, .$celltype %in% names(num_cells[num_cells > 80])] %>% 
+    logcounts() %>% 
+    as.matrix() %>% 
+    apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = sce.kidney[, sce.kidney$Sample == "ctl1" & (sce.kidney$celltype %in% names(num_cells[num_cells > 80]))]$celltype, FUN = mean)}) %>% 
+    as.data.frame() %>% 
+    rownames_to_column("cell") %>% 
+    gather(key = "Gene", value = "mean_expression", -cell)
+mean_expression_ctl$sample <- "WT"
+
+mean_expression_Grhl2_ko1 <- sce.kidney[grepl("Cx3cl1", rownames(sce.kidney)), sce.kidney$Sample == "Grhl2-ko1"] %>% 
+    .[, .$celltype %in% names(num_cells[num_cells > 80])] %>% 
+    logcounts() %>% 
+    as.matrix() %>% 
+    apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = sce.kidney[, sce.kidney$Sample == "Grhl2-ko1" & (sce.kidney$celltype %in% names(num_cells[num_cells > 80]))]$celltype, FUN = mean)}) %>% 
+    as.data.frame() %>% 
+    rownames_to_column("cell") %>% 
+    gather(key = "Gene", value = "mean_expression", -cell)
+mean_expression_Grhl2_ko1$sample <- "Grlh2-KO"
+
+mean_expression_ctl %>% rbind(mean_expression_Grhl2_ko1) %>% 
+    mutate(cell = factor(cell, levels = rev(c("PT", "DCT", "LOH", "Podo", "CD-PC", "Endo", "CD-IC", "Macro", "CD-Trans", "B lymph", "Fib", "Neutro")))) %>% 
+    ggplot(aes(Gene, cell)) +
+    geom_point(aes(size = mean_expression), show.legend = T) +
+    facet_wrap(~sample) +
+    scale_x_discrete(name = NULL) +
+    scale_y_discrete(name = NULL) +
+    scale_size_area(name = "expression") 
+
+ggsave("/home/yincy/git/Data/Kidney/GSE145690/expression_Cx3cl1_point.tiff")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
