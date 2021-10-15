@@ -17,44 +17,214 @@ library(ggplot2)
 
 # kidney PB3 WT corn oil
 ## plot profile
+
+### a-SMA and Pdgfra
+
+
 ### a-SMA and Pdgfrb
 ```{r}
-# A-SMA
-asma <- read.csv("e:/ZJU/data/kidney/Tumor/PB3/kidney-PB3-WT-corn-oil/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/a-SMA-Plot-Profile-Values.csv")
-colnames(asma) <- c("distance_in_inches", "Gray_Value")
+# the boundary between normal tissue and tumor about at 1100 pixel away
+segment <- data.frame(x = 1100, 
+                      y = 0, 
+                      xend = 1100, 
+                      yend = 200)
 
-df <- data.frame(x = c(12, 50), 
-                 y = c(10, 10), 
-                 label = c("normal tissue", "intra tumor"))
+labels <- data.frame(x = c(300, 1800), 
+                     y = c(10, 10), 
+                     label = c("normal tissue", "intra tumor"))
+
+
+# a-SMA
+asma <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/PB3-WT-a-SMA-result.csv", 
+                 header = FALSE)
+colnames(asma) <- c("distance_in_pixel", "intensity")
+asma %>% head
 
 asma %>% 
-  ggplot(aes(distance_in_inches, Gray_Value)) +
+  ggplot(aes(distance_in_pixel, intensity)) +
   geom_path() + 
   geom_smooth(color = "gray") +
-  labs(title = "a-SMA fluorencense intensity", x = "distance from margin (inche)", y = "fluorencense intensity") +
-  geom_segment(aes(x = 30, y = 100, xend = 30, yend = 5), linetype = 2, size = 0.5, color = "blue") +
-  geom_segment(aes(x = 35, y = 100, xend = 35, yend = 5), linetype = 2, size = 0.5, color = "blue") +
-  geom_label(data = df, aes(x = x, y = y, label = label)) +
+  labs(title = "a-SMA fluorescent intensity", x = "distance (pixel)", y = "fluorescent intensity") +
+  geom_segment(data = segment, 
+               aes(x = x, y = y, xend = xend, yend = yend), 
+               linetype = 2, 
+               size = 0.7, 
+               color = "red") +
+  geom_label(data = labels, aes(x = x, y = y, label = label), size = 3) +
   theme_classic()
 
-ggsave("e:/ZJU/data/kidney/Tumor/PB3/kidney-PB3-WT-corn-oil/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/a-SMA-plot-profile.tiff", 
-       width = 10, height = 6.18)
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/PB-WT-a-SMA-plot-profile.tiff", 
+       width = 10, 
+       height = 5)
 
 
 # Pdgfrb
-pdgfrb <- read.csv("e:/ZJU/data/kidney/Tumor/PB3/kidney-PB3-WT-corn-oil/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/Pdgfrb-Plot-Profile-Values.csv")
-colnames(pdgfrb) <- c("distance_in_inches", "Gray_Value")
+pdgfrb <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/PB3-WT-Pdgfrb-result.csv", 
+                   header = F)
+colnames(pdgfrb) <- c("distance_in_inches", "intensity")
+pdgfrb %>% head
 
 pdgfrb %>% 
-  ggplot(aes(distance_in_inches, Gray_Value)) +
-  geom_path() +
+  ggplot(aes(distance_in_inches, intensity)) +
+  geom_line() +
   geom_smooth(color = "gray") +
-  labs(title = "Pdgfrb fluorescence intensity", x = "distance from margin (inch)", y = "fluorencense intensity") +
-  geom_segment(aes(x = 30, y = 250, xend = 30, yend = 5), linetype = 2, size = 0.5, color = "blue") +
-  geom_segment(aes(x = 35, y = 250, xend = 35, yend = 5), linetype = 2, size = 0.5, color = "blue") +
-  geom_label(data = df, aes(x = x, y = y, label = label)) +
+  labs(title = "Pdgfrb fluorescent intensity", x = "distance (pixel)", y = "fluorescent intensity") +
+  geom_segment(data = segment, 
+               aes(x = x, y = y, xend = xend, yend = yend), 
+               linetype = 2, 
+               size = 0.7, 
+               color = "red") +
+  geom_label(data = labels, aes(x = x, y = y, label = label), size = 3) +
   theme_classic()
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/01-20x-7x1-tile-image-Orthogonal Projection/PB3-WT-Pdgfrb-plot-profile.tiff", 
+       width = 10, 
+       height = 5)
+```
+
+### vimentin and Pdgfra
+```{r}
+# the boundary between normal and tumor tissue at about 4000 pixels away
+segment <- data.frame(x = 4000, 
+                      y = 0, 
+                      xend = 4000, 
+                      yend = 120)
+
+labels <- data.frame(x = c(2000, 6000), 
+                     y = c(0, 0), 
+                     label = c("normal tissue", "intra tumor"))
+
+
+# vimentin
+vimentin <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfra/01-40x-5x1-tile-image/PB-WT-vimentin-result.csv", 
+                     header = F)
+colnames(vimentin) <- c("distance_in_pixel", "intensity")
+vimentin %>% head
+
+vimentin %>% 
+  ggplot(aes(distance_in_pixel, intensity)) +
+  geom_line() +
+  geom_smooth(color = "gray") +
+  geom_segment(data = segment, 
+               aes(x = x, y = y, xend = xend, yend = yend), 
+               linetype = 2, 
+               size = 0.7, 
+               color = "red") +
+  geom_label(data = labels, 
+             aes(x = x, y = y, label = label), size = 3) +
+  theme_classic() +
+  labs(title = "vimentin fluorescent intensity", 
+       x = "distance (pixel)", 
+       y = "fluorescent intensity")
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfra/01-40x-5x1-tile-image/PB3-WT-vimentin-profile-plot.tiff", 
+       width = 10, 
+       height = 5)
+
+
+# Pdgfra
+pdgfra <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfra/01-40x-5x1-tile-image/PB3-WT-Pdgfra-result.csv", 
+                   header = F)
+colnames(pdgfra) <- c("distance_in_pixel", "intensity")
+pdgfra %>% head
+
+pdgfra %>% 
+  ggplot(aes(distance_in_pixel, intensity)) +
+  geom_line() +
+  geom_smooth(color = "gray") +
+  geom_segment(data = segment, 
+               aes(x = x, y = y, xend = xend, yend = yend), 
+               linetype = 2, 
+               size = 0.7, 
+               color = "red") +
+  geom_label(data = labels, 
+             aes(x = x, y = y, label = label), size = 3) +
+  theme_classic() +
+  labs(title = "Pdgfra fluorecent intensity", x = "distance (pixel)", y = "fluorecent intensity") +
+  theme_classic()
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfra/01-40x-5x1-tile-image/PB3-WT-Pdgfra-profile-plot.tiff", 
+       width = 10, 
+       height = 5)
 ```
 
 
 ### vimentin and Pdgfrb
+```{r}
+# the boundary between normal and tumor tissue at about 1900 pixels away
+
+segment <- data.frame(x = 1900, 
+                      y = 0, 
+                      xend = 1900, 
+                      yend = 150)
+
+labels <- data.frame(x = c(1000, 2700), 
+                     y = c(10, 10), 
+                     label = c("normal tissue", "intra tumor"))
+
+# vimentin
+vimentin <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfrb/01-20x-5x1-tile-image/PB3-WT-vimentin-result.csv", 
+                     header = F)
+colnames(vimentin) <- c("distance_in_pixel", "intensity")
+vimentin %>% head
+
+vimentin %>% 
+  ggplot(aes(distance_in_pixel, intensity)) +
+  geom_line() +
+  geom_smooth(color = "gray") +
+  geom_segment(data = segment, 
+               aes(x = x, y = y, xend = xend, yend = yend),
+               linetype = 2, 
+               color = "red", 
+               size = 0.7) +
+  geom_label(data = labels, 
+             aes(x = x, y = y, label = label), 
+             size = 3) +
+  labs(title = "vimentin fluorencent intensity", 
+       x = "distance (pixel)", 
+       y = "fluorencent intensity") +
+  theme_classic()
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfrb/01-20x-5x1-tile-image/PB3-WT-vimentin-profile-plot.tiff", 
+       width = 10, height = 5)
+
+
+# Pdgfrb
+pdgfrb <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfrb/01-20x-5x1-tile-image/PB3-WT-Pdgfrb-result.csv", 
+                   header = F)
+colnames(pdgfrb) <- c("distance_in_pixel", "intensity") 
+pdgfrb %>% head
+
+pdgfrb %>% 
+  ggplot(aes(distance_in_pixel, intensity)) +
+  geom_line() +
+  geom_smooth(color = "gray") +
+  geom_segment(data = segment, 
+               aes(x = x, y = y, xend = xend, yend = yend), 
+               linetype = 2, 
+               color = "red", 
+               size = 0.7) +
+  geom_label(data = labels, 
+             aes(x = x, y = y, label = label), 
+             size = 3) +
+  labs(title = "Pdgfrb fluorencent intensity", 
+       x = "distance (pixel)", 
+       y = "fluorencent intensity")+
+  theme_classic()
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/vimentin-Pdgfrb/01-20x-5x1-tile-image/PB3-WT-Pdgfrb-plot-profile.tiff", 
+       width = 10, 
+       height = 5)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
