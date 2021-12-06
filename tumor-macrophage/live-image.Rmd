@@ -113,9 +113,7 @@ ggsave("e:/ZJU/data/live-image/20210531/20210531-live-image.tiff")
 # 20210702
 ```{r}
 li_20210702 <- read.csv("e:/ZJU/data/live-image/20210702/20210702-PB3-stats.csv")
-```
 
-```{r}
 li_20210702 %>% 
   group_by(group) %>% 
   mutate(mean = mean(Total.Counts), 
@@ -134,6 +132,26 @@ ggsave("e:/ZJU/data/live-image/20210702/20210702-live-image.tiff",
        width = 5, height = 7)
 ```
 
+# 20210815
+```{r}
+pb3_wt <- read.csv("G:/data/live-image/20210815/20210815-WT-PB3-STATS.csv")
+pb3_wt %>% 
+  group_by(GROUP) %>% 
+  mutate(mean = mean(Total.Counts), 
+         sd = sd(Total.Counts), 
+         se = sd / sqrt(4 - 1)) %>% 
+  ggplot() +
+  geom_bar(aes(GROUP, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(GROUP, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(GROUP, Total.Counts), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Total Counts") +
+  labs(title = "PB3")
+
+ggsave("G:/data/live-image/20210815/20210815-live-image.tiff", 
+       width = 5, height = 7)
+```
 
 
 
