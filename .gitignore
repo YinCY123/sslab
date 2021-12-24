@@ -9,7 +9,7 @@
 *.csv
 *.txt
 *.pdf
-*.docx
+#*.docx
 
 # ignore data
 *.Rda
