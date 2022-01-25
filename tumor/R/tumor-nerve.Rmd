@@ -12,12 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 This paper discrebe an AAV can specificly infects peripheral nervous system with high efficency.   
 
 ```{r}
-knitr::include_graphics("AAV-PHP.S.png")
+knitr::include_graphics("../figure/AAV-PHP.S.png")
 ```
 
 
 ```{r}
-knitr::include_graphics("addgene-PHP.S.PNG")
+knitr::include_graphics("../figure/addgene-PHP.S.PNG")
 ```
 
 
@@ -43,7 +43,7 @@ if surgically ablate all type of nerves in kidney can slow tumor progression
 
 ## Science paper 2013    
 ```{r}
-knitr::include_graphics("autonomic-nerve.PNG")
+knitr::include_graphics("../figure/autonomic-nerve.PNG")
 ```
 
 - sympathetic nerve are critical at early stage of tumor development  

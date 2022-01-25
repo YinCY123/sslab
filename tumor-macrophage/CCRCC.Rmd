@@ -227,6 +227,8 @@ rownames(sce.ccrcc) <- uniquifyFeatureNames(ID = rowData(sce.ccrcc)$ensembl,
                                             names = rowData(sce.ccrcc)$symbol)
 
 sce.ccrcc
+saveRDS(sce.ccrcc, "/home/yincy/git/Data/Kidney/ccRCC/sce.ccRCC.rds")
+sce.ccrcc <- readRDS("/home/yincy/git/Data/Kidney/ccRCC/sce.ccRCC.rds")
 ```
 
 
@@ -256,7 +258,7 @@ ggsave("/home/yincy/git/Data/Kidney/ccRCC/res/expression_PDGFRB.tiff",
 logcounts(sce.ccrcc)[1:10, 1:10]
 
 ## Normal
-mean_expression_normal <- sce.ccrcc[grepl("^PDGF", rownames(sce.ccrcc)), sce.ccrcc$region == "Normal"] %>% 
+mean_expression_normal <- sce.ccrcc[grepl("^EPO", rownames(sce.ccrcc)), sce.ccrcc$region == "Normal"] %>% 
     logcounts() %>% 
     as.matrix() %>% 
     apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = sce.ccrcc[, sce.ccrcc$region == "Normal"]$cell_name, FUN = mean)}) %>% 
@@ -282,7 +284,7 @@ percent_mean_expression <- function(object = object, region = region, ...){
     require(cowplot)
     p <- list()
     for(i in region){
-        mean_expression <- object[grepl("^PDGF", rownames(object)), object$region == i] %>% 
+        mean_expression <- object[grepl("^NT5E", rownames(object)), object$region == i] %>% 
             logcounts() %>% 
             as.matrix() %>% 
             apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = object[, object$region == i]$cell_name, FUN = mean)}) %>% 
@@ -290,7 +292,7 @@ percent_mean_expression <- function(object = object, region = region, ...){
             rownames_to_column("cell") %>% 
             gather(key = "Gene", value = "mean_expression", -cell)
         
-        percent_expression <- object[grepl("^PDGF", rownames(object)), object$region == i] %>% 
+        percent_expression <- object[grepl("^NT5E", rownames(object)), object$region == i] %>% 
             logcounts() %>% 
             as.matrix() %>% 
             apply(MARGIN = 1, FUN = function(x){tapply(X = x, INDEX = object[, object$region == i]$cell_name, FUN = function(x){mean(x > 0) * 100})}) %>% 
@@ -310,11 +312,15 @@ percent_mean_expression <- function(object = object, region = region, ...){
         p[[i]] <- plot
     }
     plot_grid(plotlist = p, ncol = 2)
-    ggsave("/home/yincy/git/Data/Kidney/ccRCC/res/expression_Pdgf.tiff", 
-           width = 20, height = 20, limitsize = F)
+    ggsave("/home/yincy/git/Data/Kidney/ccRCC/res/expression_NT5E.tiff", 
+           width = 10, height = 10, limitsize = F)
 }
 
 percent_mean_expression(object = sce.ccrcc, region = c("Normal", "Near", "Center", "Far"))
+```
+
+```{r}
+rownames(sce.ccrcc) %>% grep("^Nt5e", x = ., ignore.case = T, value = T)
 ```
 
 
@@ -425,6 +431,18 @@ ggsave("/home/yincy/git/Data/Kidney/ccRCC/res/ccrcc-noram-tissue/Pdgfb-interacti
        limitsize = F, 
        device = cairo_pdf)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
