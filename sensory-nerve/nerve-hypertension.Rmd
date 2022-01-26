@@ -1,0 +1,79 @@
+---
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+
+# renal artery denervation for hypertension
+这篇 2020 年的 review [PMID:31327701] 讲了 renal artery denervation 的方法，以及治疗效果。这些方法都是用物理化学的方式去除 renal artey nerve。 
+
+```{r}
+knitr::include_graphics("figures/renal-artery-denervation-review.png")
+```
+
+```{r}
+knitr::include_graphics("figures/denervation-methods.png")
+```
+
+---
+
+这篇 review [PMID:21242507] 中统计的 renal artery denarvation 治疗高血压的效果  
+
+```{r}
+knitr::include_graphics("figures/effectiveness-of-renal-denarvation.png")
+```
+
+---
+
+# renal nerve denarvation prevents hypertension
+这篇文章 [PMID:25411365] 用 Capsaicin 去掉肾脏感觉神经后对血压的影响。  
+
+肾脏动脉注射 Bradykinin 后血压和心率会升高，但是去掉感觉神经小鼠的血压基本没有变化。  
+
+```{r}
+knitr::include_graphics("figures/Capsaicin-denervation-1.png")
+```
+
+在 DOCA 高血压模型中去掉肾脏感觉神经的小鼠血压升高的幅度小于对照组  
+
+```{r}
+knitr::include_graphics("figures/Capsaicin-2.png")
+```
+
+---
+
+这篇文章 [PMID:7721447] 说去掉感觉神经可以防止慢性肾衰引起的高血压  
+
+```{r}
+knitr::include_graphics("figures/hypertension-prevention-1.png")
+```
+
+去除神经对血压的影响  
+
+```{r}
+knitr::include_graphics("figures/hypertention-prevention-2.png")
+```
+
+去掉感觉神经对 NE 代谢的影响  
+
+```{r}
+knitr::include_graphics("figures/hypertension-prevention-3.png")
+```
+
+---
+
+# Tools
+AAV for peripheral nervous systems
+
+```{r}
+knitr::include_graphics("figures/AAV-1.png")
+```
+
+```{r}
+knitr::include_graphics("figures/AAV-2.png")
+```
+
+
