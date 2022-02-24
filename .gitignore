@@ -7,7 +7,7 @@
 
 # ignore files
 *.csv
-*.txt
+#*.txt
 *.pdf
 #*.docx
 
