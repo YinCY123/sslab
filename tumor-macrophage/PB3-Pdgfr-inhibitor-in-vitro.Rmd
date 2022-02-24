@@ -1,0 +1,17 @@
+---
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+|抑制剂|Stock concentration(mM)|Working Concentration(uM)|稀释倍数|
+|:--|:--|:--|:--|
+|Pdgfr inhibitor (CP-673451)|200|0.1, 0.5, 2.5|2,000,000;400,000;80,000|
+|Pdgfra (DCC-2618)|150|0.2, 1.0, 5|750,000;150,000;30,000|
+|Pdgfrb (SU5402)|50|2, 10, 50|25,000;5,000;1,000|
+
+
+

@@ -203,4 +203,31 @@ pb2 %>%
 ggsave("G:/data/live-image/20220124/20220124-pb2.tiff")
 ```
 
+# PB3 flod change
+```{r}
+library(tidyverse)
+pooled <- readxl::read_xlsx("G:/data/live-image/PB3-tumor.xlsx", sheet = 3)
+```
+
+```{r}
+pooled %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(flod_change), 
+         sd = sd(flod_change), 
+         se = sd / sqrt(10-1)) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, flod_change), width = 0.1) +
+  geom_segment(aes(x = "Corn Oil", y = 35, xend = "Tamoxifen", yend = 35), 
+               colour = "black", linetype = 1, size = 0.7) +
+  geom_text(aes(x = 1.5, y = 37, label = "p < 0.01")) +
+  scale_y_continuous(name = "flod change", limits = c(0, 40)) +
+  scale_x_discrete(name = NULL) +
+  theme_classic()
+
+ggsave("G:/data/live-image/PB3-Pdgfb.png")
+```
+
+
 
