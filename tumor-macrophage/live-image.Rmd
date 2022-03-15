@@ -230,4 +230,23 @@ ggsave("G:/data/live-image/PB3-Pdgfb.png")
 ```
 
 
+# CCK8
+```{r}
+cck8 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.xlsx", 
+                          col_types = c("text", "text", "numeric"))
+```
+
+```{r}
+ggplot(cck8, aes(Treatment, OD450, group = Time)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~Time) +
+  scale_x_discrete(name = NULL) +
+  scale_fill_brewer(name = NULL, type = "qual") +
+  theme(axis.text.x = element_text(size = 7))
+
+ggsave("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.tiff", width = 10)
+```
+
+
+
 
