@@ -1,0 +1,438 @@
+---
+title: "live-image"
+author: "YinCY"
+date: "7/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+# live image data
+## 20210204
+```{r}
+li_20210204 <- read.csv("G:/data/live-image/20210204/210204 - stat.csv")
+```
+
+```{r}
+set.seed(117)
+li_20210204 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm.sr.),
+         se = sd/sqrt(3-1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.4) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), size = 2, width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  theme_classic() +
+  ggtitle("PB3")
+
+ggsave("G:/data/live-image/20210204/20210204-live-image.tiff", 
+       width = 7, height = 7)
+```
+
+
+## 20210222
+```{r}
+li_20210222 <- read.csv("G:/data/live-image/20210222/20210222 - stat.csv")
+```
+
+```{r}
+li_20210222 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm.sr.), 
+         se = sd/sqrt(3-1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.4) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), size = 2, width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  theme_classic() +
+  ggtitle("PB3")
+
+ggsave("G:/data/live-image/20210222/20210222-live-image.tiff", 
+       width = 7, height = 7)
+```
+
+
+## 20210531
+```{r}
+li_20210531_KP_B6 <- read.csv("G:/data/live-image/20210531/20210531-KP-B6/20210531-KP-B6-stat.csv")
+li_20210531_PB3 <- read.csv("G:/data/live-image/20210531/20210531-PB3/20210531 - PB3 - stat.csv")
+```
+
+```{r}
+p1 <- li_20210531_KP_B6 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm2.sr.), 
+         se = ifelse(group == "TAM", sd/sqrt(4-1), sd/sqrt(3-1))) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", position = "dodge", width = 0.4) +
+  geom_errorbar(aes(x = group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  ggtitle(label = "KP-B6")
+
+p2 <- li_20210531_PB3 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm.sr.), 
+         se = ifelse(group == "TAM", sd/sqrt(5-1), sd/sqrt(6-1))) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  ggtitle("PB3")
+```
+
+```{r}
+library(patchwork)
+
+p1 + p2
+
+ggsave("G:/data/live-image/20210531/20210531-live-image.tiff")
+```
+
+
+## 20210702
+```{r}
+li_20210702 <- read.csv("G:/data/live-image/20210702/20210702-PB3-stat.csv")
+
+li_20210702 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm2.sr.), 
+         se = sd/sqrt(2-1)) %>% 
+  ggplot()+
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  ggtitle("PB3")
+
+ggsave("G:/data/live-image/20210702/20210702-live-image.tiff", 
+       width = 7, height = 7)
+```
+
+## 20210815
+```{r}
+pb3_wt <- read.csv("G:/data/live-image/20210815/20210815-PB3-stat.csv")
+pb3_wt %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm2.sr.), 
+         se = sd / sqrt(4 - 1)) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  labs(title = "PB3")
+
+ggsave("G:/data/live-image/20210815/20210815-live-image.tiff", 
+       width = 7, height = 7)
+```
+
+## PB3 flod change
+```{r}
+library(tidyverse)
+pooled <- readxl::read_xlsx("G:/data/live-image/PB3-tumor.xlsx", sheet = 3)
+```
+
+```{r}
+pooled %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(flod_change), 
+         sd = sd(flod_change), 
+         se = sd / sqrt(10-1)) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, flod_change), width = 0.1) +
+  geom_segment(aes(x = "Corn Oil", y = 35, xend = "Tamoxifen", yend = 35), 
+               colour = "black", linetype = 1, size = 0.7) +
+  geom_text(aes(x = 1.5, y = 37, label = "p < 0.01")) +
+  scale_y_continuous(name = "flod change", limits = c(0, 40)) +
+  scale_x_discrete(name = NULL) +
+  theme_classic()
+
+ggsave("G:/data/live-image/PB3-Pdgfb.png")
+```
+
+
+## 20220117
+tumor sensory nerve
+```{r}
+pb2 <- read.csv("G:/data/live-image/20220117/stat-20220117.csv")
+```
+
+```{r}
+pb2 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm.sr.), 
+         se = sd / sqrt(4 - 1)) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL, labels = c("Capsaicin (n = 4)", "Control (n = 3)")) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  labs(title = "PB2") +
+  theme(axis.text.x = element_text(size = 15), 
+        axis.title.y = element_text(size = 10))
+
+ggsave("G:/data/live-image/20220117/20220117-PB2.tiff")
+```
+
+## 20220124
+tumor sensory nerve
+```{r}
+pb2 <- read.csv("G:/data/live-image/20220124/stat-20220124.csv")
+```
+
+```{r}
+pb2 %>% 
+  group_by(group) %>% 
+  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
+         sd = sd(Avg.Radiance..p.s.cm.sr.), 
+         se = sd / sqrt(4 - 1)) %>% 
+  ggplot() +
+  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
+  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), width = 0.1, size = 2) +
+  theme_classic() +
+  scale_x_discrete(name = NULL, labels = c("Capsaicin (n = 4)", "Control (n = 3)")) +
+  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  labs(title = "PB2") +
+  theme(axis.text.x = element_text(size = 15), 
+        axis.title.y = element_text(size = 10))
+
+ggsave("G:/data/live-image/20220124/20220124-pb2.tiff")
+```
+
+
+# PB3 Pdgfr inhibitor in vitro assay
+## CCK8
+```{r}
+cck8 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.xlsx", 
+                          col_types = c("text", "text", "numeric"))
+```
+
+```{r}
+ggplot(cck8, aes(Treatment, OD450, group = Time)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~Time) +
+  scale_x_discrete(name = NULL) +
+  scale_fill_brewer(name = NULL, type = "qual") +
+  theme(axis.text.x = element_text(size = 7))
+
+ggsave("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.tiff", width = 10)
+```
+
+
+# fluoresence microscope
+## a-SMA profile plot
+```{r}
+library(tidyverse)
+
+# Corn Oil
+pb3_corn_oil1 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-300-1.csv")
+colnames(pb3_corn_oil1) <- c("Distance", "Gray_Value")
+
+pb3_corn_oil2 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-450-2.csv")
+colnames(pb3_corn_oil2) <- c("Distance", "Gray_Value")
+
+pb3_corn_oil3 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-440-3.csv")
+colnames(pb3_corn_oil3) <- c("Distance", "Gray_Value")
+
+# boundary alignment
+pb3_corn_oil1_normal_gray_value <- pb3_corn_oil1 %>% 
+  filter(Distance < 300) %>% 
+  summarise(mean = mean(Gray_Value)) %>% 
+  magrittr::extract2(1)
+pb3_corn_oil1_normalized <- pb3_corn_oil1 %>% 
+  filter(Distance > 110) %>% 
+  mutate(Distance = Distance - 110,
+         Gray_Value_normalized = round(Gray_Value / pb3_corn_oil1_normal_gray_value, 3))
+pb3_corn_oil1_normalized$file <- factor("Corn Oil 1")
+
+
+
+pb3_corn_oil2_normal_gray_values <- pb3_corn_oil2 %>% 
+  filter(Distance < 450) %>% 
+  summarise(mean = mean(Gray_Value)) %>% 
+  magrittr::extract2(1)
+pb3_corn_oil2_normalized <- pb3_corn_oil2 %>% 
+  filter(Distance > 260) %>% 
+  mutate(Distance = Distance - 260, 
+         Gray_Value_normalized = round(Gray_Value / pb3_corn_oil2_normal_gray_values, 3))
+pb3_corn_oil2_normalized$file <- factor("Corn Oil 2")
+
+
+
+pb3_corn_oil3_normal_gray_values <- pb3_corn_oil3 %>% 
+  filter(Distance < 440) %>% 
+  summarise(mean = mean(Gray_Value)) %>% 
+  magrittr::extract2(1)
+
+pb3_corn_oil3_normalized <- pb3_corn_oil3 %>% 
+  filter(Distance > 250) %>% 
+  mutate(Distance = Distance - 250, 
+         Gray_Value_normalized = round(Gray_Value / pb3_corn_oil3_normal_gray_values, 3)) 
+pb3_corn_oil3_normalized$file <- factor("Corn Oil 3")
+
+pb3_corn_oil <- rbind(pb3_corn_oil1_normalized, 
+                      pb3_corn_oil2_normalized, 
+                      pb3_corn_oil3_normalized)
+
+
+# Tamoxifen
+pb3_tam1 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-190-1.csv")
+colnames(pb3_tam1) <- c("Distance", "Gray_Value")
+
+pb3_tam2 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-550-2.csv")
+colnames(pb3_tam2) <- c("Distance", "Gray_Value")
+
+pb3_tam3 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-280-3.csv")
+colnames(pb3_tam3) <- c("Distance", "Gray_Value")
+
+# boundary alignment
+pb3_tam1_normal_gray_value <- pb3_tam1 %>% 
+  filter(Distance < 190) %>% 
+  summarise(mean = mean(Gray_Value)) %>% 
+  magrittr::extract2(1)
+pb3_tam1_normalized <- pb3_tam1 %>% 
+  mutate(Gray_Value_normalized = round(Gray_Value / pb3_tam1_normal_gray_value, 3))
+pb3_tam1_normalized$file <- factor("Tamoxifen 1")
+
+pb3_tam2_normal_gray_value <- pb3_tam2 %>% filter(Distance < 550) %>% 
+  summarise(mean = mean(Gray_Value)) %>% 
+  magrittr::extract2(1)
+pb3_tam2_normalized <- pb3_tam2 %>% 
+  filter(Distance > 350) %>% 
+  mutate(Distance = Distance - 350,
+    Gray_Value_normalized = round(Gray_Value / pb3_tam2_normal_gray_value, 3))
+pb3_tam2_normalized$file <- factor("Tamoxifen 2")
+
+
+pb3_tam3_normal_gray_value <- pb3_tam3 %>% 
+  filter(Distance < 280) %>% 
+  summarise(mean = mean(Gray_Value)) %>% 
+  magrittr::extract2(1)
+pb3_tam3_normalized <- pb3_tam3 %>% 
+  filter(Distance > 280) %>% 
+  mutate(Distance = Distance - 280, 
+         Gray_Value_normalized = round(Gray_Value / pb3_tam3_normal_gray_value, 3))
+pb3_tam3_normalized$file <- factor("Tamoxifen 3")
+
+pb3_tam <- rbind(pb3_tam1_normalized, 
+                 pb3_tam2_normalized,
+                 pb3_tam3_normalized)
+```
+
+```{r}
+pb3_corn_oil$group = factor("Corn Oil")
+pb3_tam$group <- factor("Tamoxifen")
+bind_rows(pb3_corn_oil, pb3_tam) %>% 
+  ggplot(aes(Distance, Gray_Value_normalized)) +
+  geom_line(aes(group = file, color = file)) +
+  geom_vline(xintercept = 200, linetype = 2, size = 2, color = "gray40") +
+  theme_classic() +
+  scale_color_brewer(name = NULL, type = "div", palette = 3) +
+  scale_y_continuous(name = "normalized fluorsence intensity") +
+  labs(title = "normalized fluoresence intensity between Corn Oil and Tamoxifen")
+
+# dir.create("G:/data/kidney/Tumor/PB3/res-microscope")
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-intensity-plot.tiff", width = 10)
+```
+
+
+## a-SMA positive area
+```{r}
+pb3_corn_oil_asma <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/subregions/percent-area-PB3-Corn-Oil-a-SMA.csv")
+pb3_corn_oil_asma$group = "Corn Oil"
+pb3_tam_asma <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/subregions/percent-area-PB3-TAM-a-SMA.csv")
+pb3_tam_asma$group = "Tamoxifen"
+
+aov(percent_Area ~ group, data = rbind(pb3_corn_oil_asma, pb3_tam_asma)) %>% summary()
+t.test(pb3_corn_oil_asma$percent_Area, pb3_tam_asma$percent_Area)
+
+rbind(pb3_corn_oil_asma, pb3_tam_asma) %>% 
+  ggplot(aes(group, percent_Area)) +
+  geom_boxplot() +
+  geom_jitter(size = 2, width = 0.1) +
+  scale_y_continuous(name = "percentage of a-SMA positve area") +
+  theme_classic() +
+  labs(title = "a-SMA positive area between Corn Oil and Tamoxifen")
+
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-positive-area.tiff", width = 10)
+```
+
+
+## F480 positve area
+```{r}
+f480_corn_oil <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/F480/subregions/PB3-Corn-Oil-F480-area-percent.csv")
+f480_corn_oil$group <- "Corn Oil"
+f480_tam <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/F480/subregions/PB3-Corn-Oil-F480-area-percent.csv")
+f480_tam$group <- "Tamoxifen"
+```
+
+```{r}
+f480 <- rbind(f480_corn_oil, f480_tam)
+aov(percent_Area ~ group, data = f480) %>% summary()
+t.test(percent_Area ~ group, data = f480)
+
+f480 %>% 
+  ggplot(aes(group, percent_Area)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.1) +
+  geom_segment(x = 1, xend = 2, y = 50, yend = 50) +
+  scale_y_continuous(name = "percentage of F4/80 \npositive area", 
+                     limits = c(0, 55), 
+                     breaks = seq(0, 50, 10), 
+                     labels = paste(seq(0, 50, 10), "%", sep = "")) +
+  scale_x_discrete(name = NULL) +
+  geom_text(x = 1.5, y = 52, label = "p < 0.01") +
+  theme_classic() +
+  labs(title = "Percentage of F4/80 positive area between Corn Oil and Tamoxifen")
+  
+
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/F480-positve-area.tiff", width = 10)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

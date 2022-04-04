@@ -1,0 +1,6 @@
+1. ki67 (Mki67)
+2. Brdu
+3. Pcna: DNA replication initiation and elongation
+4. Mcm2 - Mcm7: DNA replication initiation and elongation
+5. Ccne1, Ccne2: cyclin E
+6. phospho-Histone H3
