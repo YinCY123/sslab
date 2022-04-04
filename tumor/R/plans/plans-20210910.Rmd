@@ -1,0 +1,29 @@
+---
+title: "plans-20210910"
+author: "YinCY"
+date: "9/10/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 比较敲掉巨噬细胞的 Pdgfb 后实验和对照组织中细胞成分的差异
+
+1. 血管旁 pericyte 的变化  
+    - 组化： CD31 和 Pdgfrb 共染  
+2. 巨噬细胞本身的变化  
+    - 组化：F4/80^+^ 细胞的面积  
+3. 血管密度的变化  
+    - 组化： CD31^+^ 面积  
+4. CD4^+^Foxp3^+^ Treg 的变化  
+    - 这篇文章`[PMID:24856586]`中说去掉 a-SMA^+^ 的 fibroblast，导致 CD4^+^Foxp3^+^ Treg 增加，免疫抑制增强。
+    - 流式  
+5. CD8^+^ T 细胞的变化  
+    - 流式或组化  
+6. fibroblast 的变化  
+    - 组化  
+
+
+

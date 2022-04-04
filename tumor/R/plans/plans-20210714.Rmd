@@ -1,0 +1,114 @@
+---
+title: "plans"
+author: "YinCY"
+date: "7/14/2021"
+output: 
+  word_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 实验流程
+```{r, echo=FALSE, out.width='100%', fig.width=7}
+# pdf("work-flow.pdf", width = 12, height = 6)
+# par(mar = rep(0, 4))
+plot(x = 0:16, y = 0:16, 
+     type = "n", 
+     bty = "n", 
+     xaxt = "n", 
+     yaxt = "n", 
+     xlab = NA, 
+     ylab = NA, ylim = c(3,7))
+arrows(x0 = 1, y0 = 5, 
+       x1 = 15, y1 = 5, 
+       length = 0.1, 
+       lwd = 2.5)
+
+arrows(x0 = seq(1, 14), 
+         y0 = rep(4.7, 14), 
+         x1 = seq(1, 14), 
+         y1 = rep(4.9, 14), 
+       length = 0.05)
+
+text(labels = paste("day", seq(-2, 11), sep = ""), 
+     x = seq(1, 14), y = rep(4.5, 14), 
+     cex = 0.6)
+
+text(labels = "TAM", 
+     x = c(1, 2, 3, seq(5, 14, 2)),
+     y = c(4.3),
+     cex = 0.6)
+
+arrows(x0 = 3, 
+       y0 = 5.3, 
+       x1 = 3, 
+       y1 = 5.1,
+       length = 0.05)
+
+text(labels = "tumor inoculation", 
+     x = 3, y = 5.5, 
+     cex = 0.6)
+
+arrows(length = 0.05, 
+       x0 = 14, 
+       y0 = 5.3, 
+       x1 = 14, 
+       y1 = 5.1)
+text(x = 14, y = 5.5, labels = "live image", cex = 0.6)
+# dev.off()
+```
+
+
+# 确定打 Tomaxifen 后巨噬细胞的 Pdgfb 确实被敲除了
+- 时间点：打 Tomaxifen 后第 4 天及第 11 天，看巨噬细胞 Pdgfb 的表达水平。
+
+
+# 巨噬细胞表达的 Pdgfb 是直接还是间接的影响肿瘤的生长？
+- 肿瘤细胞是否表达 Pdgfra/b? 如果肿瘤不表达 Pdgfra/b, 则可以确定是间接的影响肿瘤生长。
+
+
+# 那种细胞表达 Pdgfra/b?
+- 基质细胞  
+  + pericyte  
+  + Fibroblast  
+  + vascular smooth muscles
+
+- immune cells  
+
+
+# 去掉巨噬细胞表达的 Pdgfb 后那种细胞 Pdgfra/b 受到影响？
+- Pdgfra/b 膜内部分是络氨酸激酶，结合 Pdgfb 后会聚集，相互磷酸化。可以通过Pdgfra/b 的磷酸化水平变化确定那个细胞的受体受到影响，进而确定通过影响哪种细胞而影响肿瘤的生长。
+
+这篇文章讲了怎么去测 Pdgfr 磷酸化水平的变化[PMID:32586981]  
+
+```{r, echo=FALSE}
+knitr::include_graphics("../figure/Pdgfr-PLA.PNG")
+```
+
+# Cx3cr1-CreER:Pdgfb^flox/flox^ 小鼠注射 Tamoxifen 后 macrophage Pdgfb 的表达消失
+- FISH
+
+
+# 他人的研究测序结果发现肿瘤里表达 Pdgfb 的主要细胞是 macrophage 和 endothelial， 我们 FISH 证明正常肾脏和 PB3 肾肿瘤主要表达 Pdgfb 的细胞有哪些？
+
+
+# 雌鼠 PB3 注射后去除 macrophage Pdgfb 肿瘤变大
+- 排除 Tamoxifen 的效果
+
+
+# 肿瘤内主要表达 Pdgf reecptor 的细胞有哪些？
+- 肿瘤自身  
+- 判断哪种细胞表达 Pdgf receptor  
+  + 在 WT 肾肿瘤内 Pdgfrb 和 a-SMA, 血管 (CD31), F4/80 分别共染
+  
+- 根据上面的结果，观察 macrophage Pdgfb KO 小鼠内 Pdgfrb 细胞的数目和分布变化（受影响的细胞）  
+
+
+# macrophage Pdgfb KO 小鼠肿瘤的差异
+- 血管密度  
+- macrophage 密度  
+- CD3+ T cells  
+
