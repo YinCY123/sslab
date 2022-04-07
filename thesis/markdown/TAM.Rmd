@@ -1,23 +1,26 @@
 ---
-
 title: "肿瘤相关巨噬细胞的研究进展"
 author: "YinCY"
 date: '2022-03-07'
 output: html_document
+bibliography: ../files/TAM.bib
+biblio-style: ../files/american-medical-association.csl
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, eval=FALSE}
 knitr::include_graphics("../files/Hematopoiesis_(human)_diagram_en.svg")
 ```
 
 
 # origin of tumor associated macrophage
 # 肿瘤相关巨噬细胞的来源
-巨噬细胞是一种组织驻留的单核吞噬细胞，在维护组织稳态，保持固有免疫系统和适应性免疫系统的正常功能以及抵抗病原体的入侵方面都起着重要的作用。
+
+
+巨噬细胞是一种组织驻留的单核吞噬细胞，在维护组织稳态，保持固有免疫系统和适应性免疫系统的正常功能以及抵抗病原体的入侵方面都起着重要的作用。同时巨噬细胞也非常的多样，不同组织中驻留的巨噬细胞都有着不同的功能以适应不同的组织微环境。
 
 
 
@@ -26,7 +29,7 @@ knitr::include_graphics("../files/Hematopoiesis_(human)_diagram_en.svg")
 # 肿瘤相关巨噬细胞与炎症
 
 
-
+a
 
 
 # angiogenesis
