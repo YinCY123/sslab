@@ -28,7 +28,7 @@ knitr::include_graphics("figures/effectiveness-of-renal-denarvation.png")
 
 ---
 
-# renal nerve denarvation prevents hypertension
+# renal afferent nerve denarvation prevents hypertension
 这篇文章 [PMID:25411365] 用 Capsaicin 去掉肾脏感觉神经后对血压的影响。  
 
 肾脏动脉注射 Bradykinin 后血压和心率会升高，但是去掉感觉神经小鼠的血压基本没有变化。  
