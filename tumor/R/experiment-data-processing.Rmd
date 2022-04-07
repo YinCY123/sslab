@@ -235,22 +235,91 @@ ggsave("G:/data/live-image/20220124/20220124-pb2.tiff")
 
 
 # PB3 Pdgfr inhibitor in vitro assay
-## CCK8
+## CCK8 20220304
 ```{r}
-cck8 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.xlsx", 
-                          col_types = c("text", "text", "numeric"))
-```
+cck8_0304 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220304-cck8-pdgfr-inhibitor-1h.xlsx", 
+                          sheet = "Sheet1")
 
-```{r}
-ggplot(cck8, aes(Treatment, OD450, group = Time)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  facet_wrap(~Time) +
+cck8_0304 %>% group_by(group) %>% 
+  mutate(mean = mean(OD450),
+         n = n(),
+         se = sd(OD450) / sqrt(n -1)) %>% 
+  mutate(group = factor(group, levels = c("Control", 
+                                          "1.0uM Pdgfr inhibitor", 
+                                          "5.0uM Pdgfra inhibitor", 
+                                          "10.0uM Pdgfrb inhibitor"))) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(), width = 0.6) +
+  geom_jitter(aes(group, OD450),width = 0.2) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
   scale_x_discrete(name = NULL) +
-  scale_fill_brewer(name = NULL, type = "qual") +
-  theme(axis.text.x = element_text(size = 7))
+  scale_y_continuous(name = "OD450") +
+  theme_classic() +
+  theme(axis.text.x = element_text(hjust = 0.5, size = 8)) +
+  labs(title = "growth inhibitory effects of Pdgfr inhibitors on PB3")
 
 ggsave("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.tiff", width = 10)
 ```
+
+
+## CCK8 20220311
+```{r, warning=F}
+# 3h after CCK8 addition
+cck8_0311 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220311.xlsx", 
+                               sheet = "Sheet1", 
+                               col_types = c("text", "numeric"))
+cck8_0311 %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(OD450, na.rm = T),
+         se = sd(OD450, na.rm = T)/sqrt(n- 1), 
+         group = factor(group, levels = c("Control", 
+                                          "0.1uM Pdgfr inhibitor", 
+                                          "1uM Pdgfr inhibitor", 
+                                          "1uM Pdgfra inhibitor", 
+                                          "10uM Pdgfra inhibitor", 
+                                          "0.5uM Pdgfrb inhibitor", 
+                                          "5uM Pdgfrb inhibitor"))) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(), width = 0.9) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(group, OD450), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "OD450") +
+  theme(axis.text.x = element_text(hjust = 0, size = 9, angle = -50))
+```
+
+
+## CCK8 20220404
+```{r}
+# 1h after CCK8 addition
+cck8_0404 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220404-PB3-Pdgfr-inhibitor-CCK8-450.xlsx", 
+                               sheet = "Sheet1")
+
+cck8_0404 %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(OD450), 
+         se = sd(OD450) / sqrt(n - 1), 
+         group = factor(group, levels = c("Control", 
+                                          "0.1uM Pdgfr inhibitor", 
+                                          "1.0uM Pdgfr inhibitor", 
+                                          "0.5uM Pdgfra inhibitor", 
+                                          "5.0uM Pdgfra inhibitor", 
+                                          "1.0uM Pdgfrb inhibitor", 
+                                          "10.0uM Pdgfrb inhibitor"))) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_jitter(aes(group, OD450), width = 0.2) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "OD450") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = -70, vjust = 0, hjust = 0, size = 8))
+
+ggsave("G:/data/kidney/Tumor/CCK8/20220404-pdgfr-inhibitor-cck8.tiff", width = 10)
+```
+
 
 
 # fluoresence microscope
