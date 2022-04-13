@@ -240,7 +240,7 @@ ggsave("G:/data/live-image/20220124/20220124-pb2.tiff")
 cck8_0304 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220304-cck8-pdgfr-inhibitor-1h.xlsx", 
                           sheet = "Sheet1")
 
-cck8_0304 %>% group_by(group) %>% 
+p1 <- cck8_0304 %>% group_by(group) %>% 
   mutate(mean = mean(OD450),
          n = n(),
          se = sd(OD450) / sqrt(n -1)) %>% 
@@ -296,7 +296,7 @@ cck8_0311 %>%
 cck8_0404 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220404-PB3-Pdgfr-inhibitor-CCK8-450.xlsx", 
                                sheet = "Sheet1")
 
-cck8_0404 %>% 
+p2 <- cck8_0404 %>% 
   group_by(group) %>% 
   mutate(n = n(), 
          mean = mean(OD450), 
@@ -315,9 +315,41 @@ cck8_0404 %>%
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "OD450") +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = -70, vjust = 0, hjust = 0, size = 8))
+  theme(axis.text.x = element_text(angle = -70, vjust = 0, hjust = 0, size = 8)) +
+  labs(title = "growth inhibitory effects of Pdgfr inhibitors on PB3")
 
 ggsave("G:/data/kidney/Tumor/CCK8/20220404-pdgfr-inhibitor-cck8.tiff", width = 10)
+```
+
+
+## CCK8 20220408
+```{r}
+cck8_0408 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220408-pb3-cck8.xlsx", 
+                               sheet = "Sheet1")
+
+cck8_0408 %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(OD450), 
+         se = sd(OD450)/sqrt(n - 1), 
+         group = factor(group, levels = c("Control", 
+                                          "0.1uM Pdgfr inhibitor", 
+                                          "1.0uM Pdgfr inhibitor", 
+                                          "0.5uM Pdgfra inhibitor", 
+                                          "5.0uM Pdgfra inhibitor", 
+                                          "1.0uM Pdgfrb inhibitor", 
+                                          "10.0uM Pdgfrb inhibitor"))) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se, width = 0.2)) +
+  geom_jitter(aes(group, OD450), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "OD450") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = -50, hjust = 0, size = 8)) +
+  labs(title = "growth inhibitory effects of Pdgfr inhibitors on PB3") 
+
+ggsave("G:/data/kidney/Tumor/CCK8/20220408-Pdgfr-inhibitor-cck8.tiff", width = 10, height = 7)
 ```
 
 
@@ -420,19 +452,35 @@ pb3_tam3_normalized$file <- factor("Tamoxifen 3")
 pb3_tam <- rbind(pb3_tam1_normalized, 
                  pb3_tam2_normalized,
                  pb3_tam3_normalized)
+
+asma <- rbind(pb3_corn_oil, pb3_tam) 
+
+library(stringr)
+len <- str_count(asma$file, "[:alpha:]")
+asma$group <- substr(asma$file, 1, len) %>% as.factor()
+asma %>% head
+asma %>% tail
+
+aov(Gray_Value_normalized ~ Distance * group, data = asma) %>% summary
 ```
 
+
 ```{r}
-pb3_corn_oil$group = factor("Corn Oil")
-pb3_tam$group <- factor("Tamoxifen")
-bind_rows(pb3_corn_oil, pb3_tam) %>% 
+asma %>% 
   ggplot(aes(Distance, Gray_Value_normalized)) +
   geom_line(aes(group = file, color = file)) +
   geom_vline(xintercept = 200, linetype = 2, size = 2, color = "gray40") +
+  geom_segment(aes(x = max(Distance) * 1.01, 
+                   y = 0.2, 
+                   xend = max(Distance) * 1.01, 
+                   yend = 1.3), 
+               size = 1) +
+  geom_text(aes(x = max(Distance) * 1.04, y = 0.75), angle = 90, label = "***") +
   theme_classic() +
   scale_color_brewer(name = NULL, type = "div", palette = 3) +
+  scale_x_continuous(name = "Distance (um)") +
   scale_y_continuous(name = "normalized fluorsence intensity") +
-  labs(title = "normalized fluoresence intensity between Corn Oil and Tamoxifen")
+  labs(title = "normalized fluoresence intensity of a-SMA")
 
 # dir.create("G:/data/kidney/Tumor/PB3/res-microscope")
 ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-intensity-plot.tiff", width = 10)
@@ -453,9 +501,11 @@ rbind(pb3_corn_oil_asma, pb3_tam_asma) %>%
   ggplot(aes(group, percent_Area)) +
   geom_boxplot() +
   geom_jitter(size = 2, width = 0.1) +
-  scale_y_continuous(name = "percentage of a-SMA positve area") +
-  theme_classic() +
-  labs(title = "a-SMA positive area between Corn Oil and Tamoxifen")
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "percentage of a-SMA positve area", 
+                     breaks = seq(10, 30, 10), 
+                     labels = paste(seq(10, 30, 10), "%", sep = "")) +
+  theme_classic()
 
 ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-positive-area.tiff", width = 10)
 ```
@@ -485,18 +535,273 @@ f480 %>%
                      labels = paste(seq(0, 50, 10), "%", sep = "")) +
   scale_x_discrete(name = NULL) +
   geom_text(x = 1.5, y = 52, label = "p < 0.01") +
-  theme_classic() +
-  labs(title = "Percentage of F4/80 positive area between Corn Oil and Tamoxifen")
+  theme_classic()
   
 
 ggsave("G:/data/kidney/Tumor/PB3/res-microscope/F480-positve-area.tiff", width = 10)
 ```
 
 
+## CD31 angiotool
+```{r}
+cd31_corn_normal <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/CD31/normal/prob-maps/PB3-Corn-Oil-normal-CD31-auto-diameter.xls")
+cd31_corn_normal$group <- factor("Corn Oil")
+cd31_corn_tumor <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/CD31/tumor/prob-maps/PB3-Corn-Oil-tumor-CD31-auto-diameter.xls")
+cd31_corn_tumor$group <- factor("Corn Oil")
+
+cd31_tam_normal <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/CD31/normal/prob-maps/PB3-TAM-normal-CD31-auto-diameter.xls")
+cd31_tam_normal$group <- factor("Tamoxifen")
+cd31_tam_tumor <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/CD31/tumor/prob-maps/PB3-TAM-tumor-CD31-auto-diameter.xls")
+cd31_tam_tumor$group <- factor("Tamoxifen")
+```
+
+
+```{r}
+library(ggplot2)
+library(magrittr)
+library(dplyr)
+library(pipeR)
+library(patchwork)
+
+get_pval <- function(obj){
+  obj[[1]][1, 5]
+}
+
+cd31_normal <- cd31_corn_normal %>% rbind(cd31_tam_normal) %>% 
+  select(-c(2:11)) %>% 
+  relocate(group, .after = 1)
+
+
+aov(`Vessels percentage area` ~ group, data = cd31_normal) %>% summary()
+p_normal_cd31_percentage <- cd31_normal %>% 
+  select(group, `Vessels percentage area`) %>% 
+  group_by(group) %>% 
+  mutate(mean_percentage = mean(`Vessels percentage area`), 
+         n = n(),
+         se = sd(`Vessels percentage area`)/sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean_percentage)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean_percentage - se, ymax = mean_percentage + se), width = 0.2) +
+  geom_jitter(aes(y = `Vessels percentage area`), width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "percentage of CD31 positive area", 
+                     breaks = seq(5, 45, 10), 
+                     labels = paste(seq(5, 45, 10), "%", sep = ""), 
+                     limits = c(0, 40)) +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov(`Junctions density` ~ group, data = cd31_normal) %>% summary()
+p_normal_cd31_junction_density <- cd31_normal %>% 
+  select(group, `Junctions density`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(`Junctions density`), 
+         se = sd(`Junctions density`)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = `Junctions density`), width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Junction density") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov(`Average Vessels Length` ~ group, data = cd31_normal) %>% summary()
+p_normal_cd31_mean_length <- cd31_normal %>% 
+  select(group, `Average Vessels Length`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(`Average Vessels Length`), 
+         se = sd(`Average Vessels Length`)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = `Average Vessels Length`), width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Average Vessel Length (um)",limits = c(0, 0.05)) +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov(`Mean E Lacunarity` ~ group, data = cd31_normal) %>% summary()
+p_normal_lacunarity <- cd31_normal %>% 
+  select(group, `Mean E Lacunarity`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(`Mean E Lacunarity`), 
+         se = sd(`Mean E Lacunarity`) / sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = `Mean E Lacunarity`), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Lacunarity") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov(`Explant area` ~ group, data = cd31_normal) %>% summary()
+p_normal_end_point_density <- cd31_normal %>% 
+  select(group, explant_area = `Explant area`, number_of_end_points = `Total Number of End Points`) %>% 
+  mutate(end_points_density = round(number_of_end_points / explant_area, 4)) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(end_points_density), 
+         se = sd(end_points_density) / sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = end_points_density), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "end points density") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+```
+
+
+```{r}
+p_normal_cd31_percentage + 
+  p_normal_cd31_mean_length + 
+  p_normal_cd31_junction_density +
+  # p_normal_end_point_density +
+  p_normal_lacunarity +
+  plot_annotation(title = "out side of tumor", 
+                  theme = theme(plot.title = element_text(hjust = 0.5, size = 20)))
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/PB3-CD31-normal.tiff", width = 10, height = 7)
+```
+
+```{r}
+cd31_tumor <- rbind(cd31_corn_tumor, cd31_tam_tumor) %>% select(-c(2:11)) %>% relocate(group, .after = 1)
+
+aov_tumor_cd31_percentage <- aov(`Vessels percentage area` ~ group, data = cd31_tumor) %>% summary 
+p_tumor_cd31_percentage <- cd31_tumor %>% 
+  select(group, `Vessels percentage area`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(`Vessels percentage area`), 
+         se = sd(`Vessels percentage area`)/sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = `Vessels percentage area`), width = 0.2) +
+  geom_segment(aes(x = 1, 
+                   y = max(cd31_tumor$`Vessels percentage area`) * 1.1, 
+                   xend = 2, 
+                   yend = max(cd31_tumor$`Vessels percentage area`) * 1.1), 
+               size = 1.2) +
+  geom_text(aes(x = 1.5, 
+                y = max(cd31_tumor$`Vessels percentage area`) * 1.2), 
+            label = round(get_pval(aov_tumor_cd31_percentage), 4)) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "percentage of CD31 positive area", 
+                     breaks = seq(5, 30, 5), 
+                     labels = paste(seq(5, 30, 5), "%", sep = ""), 
+                     limits = c(0, 30)) +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov_tumor_junctions_density <- aov(`Junctions density` ~ group, data = cd31_tumor) %>% summary
+p_tumor_junction_density <- cd31_tumor %>% 
+  select(`Image Name`, group, `Junctions density`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(`Junctions density`), 
+         se = sd(`Junctions density`)/sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = `Junctions density`), width = 0.2) +
+  geom_segment(aes(x = 1, 
+                   y = max(cd31_tumor$`Junctions density`) * 1.1), 
+               xend = 2, 
+               yend = max(cd31_tumor$`Junctions density`) * 1.1, 
+               size = 1.2) + 
+  geom_text(aes(x = 1.5, 
+                y = max(cd31_tumor$`Junctions density`) * 1.2), 
+            label = round(get_pval(aov_tumor_junctions_density), 4)) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "junctions density") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov_tumor_mean_vessels_length <- aov(`Average Vessels Length` ~ group, data = cd31_tumor) %>% summary
+p_tumor_mean_vessels_length <- cd31_tumor %>% 
+  select(group, average_vessels_length = `Average Vessels Length`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(average_vessels_length), 
+         se = sd(average_vessels_length)/sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = average_vessels_length), width = 0.2) +
+  geom_segment(aes(x = 1, 
+                   y = max(cd31_tumor$`Average Vessels Length`) * 1.1, 
+                   xend = 2, 
+                   yend = max(cd31_tumor$`Average Vessels Length`) * 1.1), 
+               size = 1.2) +
+  geom_text(aes(x = 1.5, y = max(cd31_tumor$`Average Vessels Length`) * 1.2), 
+            label = round(get_pval(aov_tumor_mean_vessels_length), 4)) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Average Vessels Length (um)") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+
+
+aov(`Mean E Lacunarity` ~ group, data = cd31_tumor) %>% summary
+p_tumor_lacunarity <- cd31_tumor %>% 
+  select(group, mean_e_lacunarity = `Mean E Lacunarity`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         mean = mean(mean_e_lacunarity), 
+         se = sd(mean_e_lacunarity)/sqrt(n - 1)) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = mean_e_lacunarity), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "Lacunarity") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
 
 
 
+aov(end_points_density ~ group, data = end_points_density) %>% summary
+p_tumor_end_points_density <- cd31_tumor %>% 
+  select(group, explant_area = `Explant area`, number_of_end_points = `Total Number of End Points`) %>% 
+  group_by(group) %>% 
+  mutate(n = n(), 
+         end_points_density = round(number_of_end_points / explant_area, 4),
+         mean = mean(end_points_density), 
+         se = sd(end_points_density)/sqrt(n - 1)) %>>% 
+    (~ end_points_density) %>% 
+  ggplot(aes(group, mean)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  geom_jitter(aes(y = end_points_density), width = 0.2) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = "end points density") +
+  theme_classic() +
+  theme(axis.title.y = element_text(size = 8))
+```
 
+
+```{r}
+p_tumor_cd31_percentage +
+  p_tumor_mean_vessels_length +
+  p_tumor_junction_density +
+  # p_tumor_end_points_density +
+  p_tumor_lacunarity +
+  plot_annotation(title = "intro tumor", 
+                  theme = theme(plot.title = element_text(hjust = 0.5, size = 20)))
+
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/PB3-CD31-tumor.tiff", width = 10, height = 7)
+```
 
 
 
