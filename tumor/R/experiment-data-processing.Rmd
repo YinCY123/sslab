@@ -11,181 +11,251 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r, message=FALSE, warning=FALSE}
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(janitor)
+library(magrittr)
+library(pipeR)
+library(patchwork)
 ```
+
+# experiment flow
+```{r}
+tiff(filename = "experiemnt-flow.tiff", 
+     height = 200, width = 1000, 
+     res = 100)
+par(mai = c(0, 0, 0, 0))
+plot(x = 0:32, y = 0:32, 
+     type = "n", 
+     xlab = NA, 
+     ylab = NA, 
+     xaxt = "n", 
+     yaxt = "n", 
+     bty = "n")
+# main arrows
+arrows(x0 = 0, y0 = 14, 
+       x1 = 32, y1 = 14, 
+       lwd = 3, 
+       length = 0.1)
+
+# bottom arrows
+arrows(x0 = seq(1, 30, 2), 
+       y0 = 11, 
+       x1 = seq(1, 30, 2), 
+       y1 = 13.5, 
+       length = 0.07)
+text(x = seq(1, 30, 2), 
+     y = 10, 
+     labels = paste("day", -3:11), 
+     cex = 0.6)
+
+text(x = c(1, 3, 5, 7, seq(11, 30, 4)), 
+     y = 7, 
+     labels = "Tamoxifen or \nCorn Oil", 
+     cex = 0.5)
+
+# top arrows
+arrows(x0 = c(7, 29),
+       y0 = 17,
+       x1 = c(7, 29), 
+       y1 = 14.5, 
+       length = 0.07)
+text(x = c(7, 29), 
+     y = 18.5, 
+     labels = c("PB3 inoculation", "live image"), 
+     cex = 0.5)
+
+dev.off()
+```
+
 
 # live image data
 ## 20210204
 ```{r}
-li_20210204 <- read.csv("G:/data/live-image/20210204/210204 - stat.csv")
+li_20210204 <- read.csv("G:/data/live-image/20210204/210204 - stat.csv") %>% 
+  clean_names()
 ```
 
 ```{r}
 set.seed(117)
 li_20210204 %>% 
   group_by(group) %>% 
-  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
-         sd = sd(Avg.Radiance..p.s.cm.sr.),
-         se = sd/sqrt(3-1)) %>% 
+  mutate(n = n(), 
+         mean = mean(total_flux_p_s), 
+         se = sd(total_flux_p_s)/sqrt(n - 1)) %>% 
   ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.4) +
+  geom_bar(aes(fill = group), stat = "identity", position = "dodge", width = 0.4) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), size = 2, width = 0.1) +
+  geom_jitter(aes(group, total_flux_p_s), size = 2, width = 0.1) +
   scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  scale_y_continuous(name = "photons/sec") +
   theme_classic() +
-  ggtitle("PB3")
+  ggtitle("PB3") +
+  scale_fill_discrete(name = NULL) +
+  theme(axis.text = element_text(face = "bold", size = 13), 
+        legend.position = "none", 
+        axis.title.y = element_text(size = 15))
 
-ggsave("G:/data/live-image/20210204/20210204-live-image.tiff", 
+ggsave("G:/data/live-image/20210204/20210204-live-image-1.tiff", 
        width = 7, height = 7)
 ```
 
 
 ## 20210222
 ```{r}
-li_20210222 <- read.csv("G:/data/live-image/20210222/20210222 - stat.csv")
+li_20210222 <- read.csv("G:/data/live-image/20210222/20210222 - stat.csv") %>% 
+  clean_names()
 ```
 
 ```{r}
 li_20210222 %>% 
   group_by(group) %>% 
-  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
-         sd = sd(Avg.Radiance..p.s.cm.sr.), 
-         se = sd/sqrt(3-1)) %>% 
+  mutate(n = n(), 
+         mean = mean(total_flux_p_s), 
+         se = sd(total_flux_p_s)/sqrt(n - 1)) %>% 
   ggplot(aes(group, mean)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.4) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), size = 2, width = 0.1) +
+  geom_jitter(aes(group, total_flux_p_s), size = 2, width = 0.1) +
   scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+  scale_y_continuous(name = "photons/sec") +
   theme_classic() +
-  ggtitle("PB3")
+  ggtitle("PB3") +
+  theme(axis.text = element_text(face = "bold", size = 10))
 
 ggsave("G:/data/live-image/20210222/20210222-live-image.tiff", 
-       width = 7, height = 7)
+       width = 5, height = 7)
 ```
 
 
 ## 20210531
 ```{r}
-li_20210531_KP_B6 <- read.csv("G:/data/live-image/20210531/20210531-KP-B6/20210531-KP-B6-stat.csv")
-li_20210531_PB3 <- read.csv("G:/data/live-image/20210531/20210531-PB3/20210531 - PB3 - stat.csv")
+# li_20210531_KP_B6 <- read.csv("G:/data/live-image/20210531/20210531-KP-B6/20210531-KP-B6-stat.csv")
+li_20210531_PB3 <- read.csv("G:/data/live-image/20210531/20210531-PB3/20210531 - PB3 - stat.csv") %>% 
+  clean_names()
 ```
 
 ```{r}
-p1 <- li_20210531_KP_B6 %>% 
-  group_by(group) %>% 
-  mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
-         sd = sd(Avg.Radiance..p.s.cm2.sr.), 
-         se = ifelse(group == "TAM", sd/sqrt(4-1), sd/sqrt(3-1))) %>% 
-  ggplot() +
-  geom_bar(aes(group, mean), stat = "identity", position = "dodge", width = 0.4) +
-  geom_errorbar(aes(x = group, ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
-  theme_classic() +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
-  ggtitle(label = "KP-B6")
+# p1 <- li_20210531_KP_B6 %>% 
+#   group_by(group) %>% 
+#   mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
+#          sd = sd(Avg.Radiance..p.s.cm2.sr.), 
+#          se = ifelse(group == "TAM", sd/sqrt(4-1), sd/sqrt(3-1))) %>% 
+#   ggplot() +
+#   geom_bar(aes(group, mean), stat = "identity", position = "dodge", width = 0.4) +
+#   geom_errorbar(aes(x = group, ymin = mean - se, ymax = mean + se), width = 0.1) +
+#   geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
+#   theme_classic() +
+#   scale_x_discrete(name = NULL) +
+#   scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
+#   ggtitle(label = "KP-B6")
 
-p2 <- li_20210531_PB3 %>% 
+li_20210531_PB3 %>% 
   group_by(group) %>% 
-  mutate(mean = mean(Avg.Radiance..p.s.cm.sr.), 
-         sd = sd(Avg.Radiance..p.s.cm.sr.), 
-         se = ifelse(group == "TAM", sd/sqrt(5-1), sd/sqrt(6-1))) %>% 
+  mutate(n = n(), 
+         mean = mean(total_flux_p_s), 
+         se = sd(total_flux_p_s)/sqrt(n - 1)) %>% 
   ggplot() +
   geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
   geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, Avg.Radiance..p.s.cm.sr.), width = 0.1, size = 2) +
+  geom_jitter(aes(group, total_flux_p_s), width = 0.1, size = 2) +
   theme_classic() +
   scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
-  ggtitle("PB3")
+  scale_y_continuous(name = "photons/sec") +
+  ggtitle("PB3") +
+  theme(axis.text = element_text(face = "bold", size = 10))
+ggsave("G:/data/live-image/20210531/20210531-live-image.tiff", width = 5, height = 7)
 ```
 
-```{r}
-library(patchwork)
-
-p1 + p2
-
-ggsave("G:/data/live-image/20210531/20210531-live-image.tiff")
-```
 
 
 ## 20210702
 ```{r}
-li_20210702 <- read.csv("G:/data/live-image/20210702/20210702-PB3-stat.csv")
+li_20210702 <- read.csv("G:/data/live-image/20210702/20210702-PB3-stat.csv") %>% 
+  clean_names()
 
 li_20210702 %>% 
   group_by(group) %>% 
-  mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
-         sd = sd(Avg.Radiance..p.s.cm2.sr.), 
-         se = sd/sqrt(2-1)) %>% 
+  mutate(n = n(), 
+         mean = mean(total_flux_p_s), 
+         se = sd(total_flux_p_s) / sqrt(n - 1)) %>% 
   ggplot()+
   geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
   geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
+  geom_jitter(aes(group, total_flux_p_s), width = 0.1, size = 2) +
   theme_classic() +
   scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
-  ggtitle("PB3")
+  scale_y_continuous(name = "photons/sec") +
+  ggtitle("PB3") +
+  theme(axis.text = element_text(face = "bold", size = 10))
 
 ggsave("G:/data/live-image/20210702/20210702-live-image.tiff", 
-       width = 7, height = 7)
+       width = 5, height = 7)
 ```
 
 ## 20210815
 ```{r}
-pb3_wt <- read.csv("G:/data/live-image/20210815/20210815-PB3-stat.csv")
+pb3_wt <- read.csv("G:/data/live-image/20210815/20210815-PB3-stat.csv") %>% 
+  clean_names()
 pb3_wt %>% 
   group_by(group) %>% 
-  mutate(mean = mean(Avg.Radiance..p.s.cm2.sr.), 
-         sd = sd(Avg.Radiance..p.s.cm2.sr.), 
-         se = sd / sqrt(4 - 1)) %>% 
+  mutate(n = n(), 
+         mean = mean(total_flux_p_s), 
+         se = sd(total_flux_p_s)/sqrt(n - 1)) %>% 
   ggplot() +
   geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
   geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, Avg.Radiance..p.s.cm2.sr.), width = 0.1, size = 2) +
+  geom_jitter(aes(group, total_flux_p_s), width = 0.1, size = 2) +
   theme_classic() +
   scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = expression(paste("Avg Radiance ", (photons/sec/cm^2/sr)))) +
-  labs(title = "PB3")
+  scale_y_continuous(name = "photons/sec") +
+  labs(title = "PB3") +
+  theme(axis.text = element_text(face = "bold", size = 10))
 
 ggsave("G:/data/live-image/20210815/20210815-live-image.tiff", 
-       width = 7, height = 7)
+       width = 5, height = 7)
 ```
 
 ## PB3 flod change
 ```{r}
-library(tidyverse)
-pooled <- readxl::read_xlsx("G:/data/live-image/PB3-tumor.xlsx", sheet = 3)
+pooled <- readxl::read_xlsx("G:/data/live-image/PB3-tumor-pooled-together.xlsx", 
+                            sheet = "Sheet1") %>% 
+  clean_names()
+pooled_aov <- aov(normalized ~ group, data = pooled) %>% summary
+t.test(normalized ~ group, data = pooled)
 ```
 
 ```{r}
 pooled %>% 
   group_by(group) %>% 
-  mutate(mean = mean(flod_change), 
-         sd = sd(flod_change), 
-         se = sd / sqrt(10-1)) %>% 
+  mutate(n = n(), 
+         normalized_log2 = log2(normalized),
+         mean = mean(normalized_log2), 
+         se = sd(normalized_log2)/sqrt(n - 1)) %>% 
   ggplot() +
-  geom_bar(aes(group, mean), stat = "identity", width = 0.4, position = "dodge") +
-  geom_errorbar(aes(group, ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_jitter(aes(group, flod_change), width = 0.1) +
-  geom_segment(aes(x = "Corn Oil", y = 35, xend = "Tamoxifen", yend = 35), 
+  geom_boxplot(aes(group, normalized_log2)) +
+  geom_jitter(aes(group, normalized_log2), width = 0.1) +
+  geom_segment(aes(x = "Corn Oil", y = max(normalized_log2) * 1.2, 
+                   xend = "Tamoxifen", yend = max(normalized_log2) * 1.2), 
                colour = "black", linetype = 1, size = 0.7) +
-  geom_text(aes(x = 1.5, y = 37, label = "p < 0.01")) +
-  scale_y_continuous(name = "flod change", limits = c(0, 40)) +
+  geom_text(aes(x = 1.5, y = max(normalized_log2) * 1.3, 
+                label = ifelse(get_pval(pooled_aov) < 0.01, "p < 0.01", get_pval(pooled_aov)))) +
+  scale_y_continuous(name = "log2 flod change") +
   scale_x_discrete(name = NULL) +
-  theme_classic()
+  theme_classic() +
+  theme(axis.text = element_text(face = "bold"))
 
-ggsave("G:/data/live-image/PB3-Pdgfb.png")
+ggsave("G:/data/live-image/PB3-Pdgfb.tiff")
 ```
 
 
+# sensory nerve renal tumor
 ## 20220117
 tumor sensory nerve
 ```{r}
 pb2 <- read.csv("G:/data/live-image/20220117/stat-20220117.csv")
 ```
+
 
 ```{r}
 pb2 %>% 
@@ -240,7 +310,7 @@ ggsave("G:/data/live-image/20220124/20220124-pb2.tiff")
 cck8_0304 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220304-cck8-pdgfr-inhibitor-1h.xlsx", 
                           sheet = "Sheet1")
 
-p1 <- cck8_0304 %>% group_by(group) %>% 
+cck8_0304 %>% group_by(group) %>% 
   mutate(mean = mean(OD450),
          n = n(),
          se = sd(OD450) / sqrt(n -1)) %>% 
@@ -255,40 +325,11 @@ p1 <- cck8_0304 %>% group_by(group) %>%
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "OD450") +
   theme_classic() +
-  theme(axis.text.x = element_text(hjust = 0.5, size = 8)) +
-  labs(title = "growth inhibitory effects of Pdgfr inhibitors on PB3")
+  theme(axis.text = element_text(hjust = 0.5, face = "bold", size = 10)) 
 
-ggsave("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.tiff", width = 10)
+ggsave("G:/data/kidney/Tumor/CCK8/20220304-Pdgfr-inhibitor-cck8.tiff", 
+       width = 10, height = 7)
 ```
-
-
-## CCK8 20220311
-```{r, warning=F}
-# 3h after CCK8 addition
-cck8_0311 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220311.xlsx", 
-                               sheet = "Sheet1", 
-                               col_types = c("text", "numeric"))
-cck8_0311 %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(OD450, na.rm = T),
-         se = sd(OD450, na.rm = T)/sqrt(n- 1), 
-         group = factor(group, levels = c("Control", 
-                                          "0.1uM Pdgfr inhibitor", 
-                                          "1uM Pdgfr inhibitor", 
-                                          "1uM Pdgfra inhibitor", 
-                                          "10uM Pdgfra inhibitor", 
-                                          "0.5uM Pdgfrb inhibitor", 
-                                          "5uM Pdgfrb inhibitor"))) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(), width = 0.9) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(group, OD450), width = 0.2) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "OD450") +
-  theme(axis.text.x = element_text(hjust = 0, size = 9, angle = -50))
-```
-
 
 ## CCK8 20220404
 ```{r}
@@ -296,7 +337,7 @@ cck8_0311 %>%
 cck8_0404 <- readxl::read_xlsx("G:/data/kidney/Tumor/CCK8/20220404-PB3-Pdgfr-inhibitor-CCK8-450.xlsx", 
                                sheet = "Sheet1")
 
-p2 <- cck8_0404 %>% 
+cck8_0404 %>% 
   group_by(group) %>% 
   mutate(n = n(), 
          mean = mean(OD450), 
@@ -315,10 +356,10 @@ p2 <- cck8_0404 %>%
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "OD450") +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = -70, vjust = 0, hjust = 0, size = 8)) +
-  labs(title = "growth inhibitory effects of Pdgfr inhibitors on PB3")
+  theme(axis.text.x = element_text(angle = -60, vjust = 0, hjust = 0, size = 8, face = "bold"), 
+        axis.text.y = element_text(face = "bold", size = 10)) 
 
-ggsave("G:/data/kidney/Tumor/CCK8/20220404-pdgfr-inhibitor-cck8.tiff", width = 10)
+ggsave("G:/data/kidney/Tumor/CCK8/20220404-pdgfr-inhibitor-cck8.tiff", width = 10, height = 7)
 ```
 
 
@@ -346,10 +387,11 @@ cck8_0408 %>%
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "OD450") +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = -50, hjust = 0, size = 8)) +
-  labs(title = "growth inhibitory effects of Pdgfr inhibitors on PB3") 
+  theme(axis.text.x = element_text(angle = -60, hjust = 0, size = 8, face = "bold"), 
+        axis.text.y = element_text(face = "bold", size = 10)) 
 
-ggsave("G:/data/kidney/Tumor/CCK8/20220408-Pdgfr-inhibitor-cck8.tiff", width = 10, height = 7)
+ggsave("G:/data/kidney/Tumor/CCK8/20220408-Pdgfr-inhibitor-cck8.tiff", 
+       width = 10, height = 7)
 ```
 
 
@@ -357,101 +399,120 @@ ggsave("G:/data/kidney/Tumor/CCK8/20220408-Pdgfr-inhibitor-cck8.tiff", width = 1
 # fluoresence microscope
 ## a-SMA profile plot
 ```{r}
-library(tidyverse)
-
 # Corn Oil
-pb3_corn_oil1 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-300-1.csv")
-colnames(pb3_corn_oil1) <- c("Distance", "Gray_Value")
+pb3_corn_oil1 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-450-2.csv") %>% clean_names()
+pb3_corn_oil2 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-440-3.csv") %>% clean_names()
+pb3_corn_oil3 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-860-4.csv") %>% clean_names()
+pb3_corn_oil4 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-520-5.csv") %>% clean_names()
 
-pb3_corn_oil2 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-450-2.csv")
-colnames(pb3_corn_oil2) <- c("Distance", "Gray_Value")
-
-pb3_corn_oil3 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/a-SMA/intensity-plot/PB3-Corn-Oil-a-SMA-intensity-boundary-440-3.csv")
-colnames(pb3_corn_oil3) <- c("Distance", "Gray_Value")
-
-# boundary alignment
+# boundary alignment 190
+align <- 260
 pb3_corn_oil1_normal_gray_value <- pb3_corn_oil1 %>% 
-  filter(Distance < 300) %>% 
-  summarise(mean = mean(Gray_Value)) %>% 
+  filter(distance_microns < 450) %>% 
+  summarise(mean = mean(gray_value)) %>% 
   magrittr::extract2(1)
 pb3_corn_oil1_normalized <- pb3_corn_oil1 %>% 
-  filter(Distance > 110) %>% 
-  mutate(Distance = Distance - 110,
-         Gray_Value_normalized = round(Gray_Value / pb3_corn_oil1_normal_gray_value, 3))
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align,
+         Gray_Value_normalized = round(gray_value / pb3_corn_oil1_normal_gray_value, 3))
 pb3_corn_oil1_normalized$file <- factor("Corn Oil 1")
 
 
-
+align <- 250
 pb3_corn_oil2_normal_gray_values <- pb3_corn_oil2 %>% 
-  filter(Distance < 450) %>% 
-  summarise(mean = mean(Gray_Value)) %>% 
+  filter(distance_microns < 440) %>% 
+  summarise(mean = mean(gray_value)) %>% 
   magrittr::extract2(1)
 pb3_corn_oil2_normalized <- pb3_corn_oil2 %>% 
-  filter(Distance > 260) %>% 
-  mutate(Distance = Distance - 260, 
-         Gray_Value_normalized = round(Gray_Value / pb3_corn_oil2_normal_gray_values, 3))
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align, 
+         Gray_Value_normalized = round(gray_value / pb3_corn_oil2_normal_gray_values, 3))
 pb3_corn_oil2_normalized$file <- factor("Corn Oil 2")
 
 
-
+align <- 670
 pb3_corn_oil3_normal_gray_values <- pb3_corn_oil3 %>% 
-  filter(Distance < 440) %>% 
-  summarise(mean = mean(Gray_Value)) %>% 
+  filter(distance_microns < 860) %>% 
+  summarise(mean = mean(gray_value)) %>% 
   magrittr::extract2(1)
-
 pb3_corn_oil3_normalized <- pb3_corn_oil3 %>% 
-  filter(Distance > 250) %>% 
-  mutate(Distance = Distance - 250, 
-         Gray_Value_normalized = round(Gray_Value / pb3_corn_oil3_normal_gray_values, 3)) 
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align, 
+         Gray_Value_normalized = round(gray_value / pb3_corn_oil3_normal_gray_values, 3)) 
 pb3_corn_oil3_normalized$file <- factor("Corn Oil 3")
+
+
+align <- 330
+pb3_corn_oil4_normal_gray_values <- pb3_corn_oil4 %>% 
+  filter(distance_microns < 520) %>% 
+  summarise(mean = mean(gray_value)) %>% 
+  magrittr::extract2(1)
+pb3_corn_oil4_normalized <- pb3_corn_oil4 %>% 
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align, 
+         Gray_Value_normalized = round(gray_value / pb3_corn_oil4_normal_gray_values, 3))
+pb3_corn_oil4_normalized$file = factor("Corn Oil 4")
 
 pb3_corn_oil <- rbind(pb3_corn_oil1_normalized, 
                       pb3_corn_oil2_normalized, 
-                      pb3_corn_oil3_normalized)
+                      pb3_corn_oil3_normalized, 
+                      pb3_corn_oil4_normalized)
 
 
 # Tamoxifen
-pb3_tam1 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-190-1.csv")
-colnames(pb3_tam1) <- c("Distance", "Gray_Value")
+pb3_tam1 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-190-1.csv") %>% clean_names()
+pb3_tam2 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-280-3.csv") %>% clean_names()
+pb3_tam3 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-770-4.csv") %>% clean_names()
+pb3_tam4 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-210-5.csv") %>% clean_names()
 
-pb3_tam2 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-550-2.csv")
-colnames(pb3_tam2) <- c("Distance", "Gray_Value")
-
-pb3_tam3 <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/a-SMA/intensity-plot/PB3-TAM-a-SMA-intensity-plot-boundary-280-3.csv")
-colnames(pb3_tam3) <- c("Distance", "Gray_Value")
-
-# boundary alignment
+# boundary alignment 190
+align <- 190
 pb3_tam1_normal_gray_value <- pb3_tam1 %>% 
-  filter(Distance < 190) %>% 
-  summarise(mean = mean(Gray_Value)) %>% 
+  filter(distance_microns < 190) %>% 
+  summarise(mean = mean(gray_value)) %>% 
   magrittr::extract2(1)
 pb3_tam1_normalized <- pb3_tam1 %>% 
-  mutate(Gray_Value_normalized = round(Gray_Value / pb3_tam1_normal_gray_value, 3))
+  mutate(Gray_Value_normalized = round(gray_value / pb3_tam1_normal_gray_value, 3))
 pb3_tam1_normalized$file <- factor("Tamoxifen 1")
 
-pb3_tam2_normal_gray_value <- pb3_tam2 %>% filter(Distance < 550) %>% 
-  summarise(mean = mean(Gray_Value)) %>% 
+align <- 90
+pb3_tam2_normal_gray_value <- pb3_tam2 %>% 
+  filter(distance_microns < 280) %>% 
+  summarise(mean = mean(gray_value)) %>% 
   magrittr::extract2(1)
 pb3_tam2_normalized <- pb3_tam2 %>% 
-  filter(Distance > 350) %>% 
-  mutate(Distance = Distance - 350,
-    Gray_Value_normalized = round(Gray_Value / pb3_tam2_normal_gray_value, 3))
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align,
+    Gray_Value_normalized = round(gray_value / pb3_tam2_normal_gray_value, 3))
 pb3_tam2_normalized$file <- factor("Tamoxifen 2")
 
-
+align <- 580
 pb3_tam3_normal_gray_value <- pb3_tam3 %>% 
-  filter(Distance < 280) %>% 
-  summarise(mean = mean(Gray_Value)) %>% 
+  filter(distance_microns < 770) %>% 
+  summarise(mean = mean(gray_value)) %>% 
   magrittr::extract2(1)
 pb3_tam3_normalized <- pb3_tam3 %>% 
-  filter(Distance > 280) %>% 
-  mutate(Distance = Distance - 280, 
-         Gray_Value_normalized = round(Gray_Value / pb3_tam3_normal_gray_value, 3))
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align, 
+         Gray_Value_normalized = round(gray_value / pb3_tam3_normal_gray_value, 3))
 pb3_tam3_normalized$file <- factor("Tamoxifen 3")
+
+align <- 20
+pb3_tam4_normal_gray_value <- pb3_tam4 %>% 
+  filter(distance_microns < 210) %>% 
+  summarise(mean = mean(gray_value)) %>% 
+  magrittr::extract2(1)
+pb3_tam4_normalized <- pb3_tam4 %>% 
+  filter(distance_microns > align) %>% 
+  mutate(distance_microns = distance_microns - align, 
+         Gray_Value_normalized = round(gray_value / pb3_tam4_normal_gray_value, 3))
+pb3_tam4_normalized$file <- "Tamoxifen 4"
+
 
 pb3_tam <- rbind(pb3_tam1_normalized, 
                  pb3_tam2_normalized,
-                 pb3_tam3_normalized)
+                 pb3_tam3_normalized, 
+                 pb3_tam4_normalized)
 
 asma <- rbind(pb3_corn_oil, pb3_tam) 
 
@@ -461,29 +522,34 @@ asma$group <- substr(asma$file, 1, len) %>% as.factor()
 asma %>% head
 asma %>% tail
 
-aov(Gray_Value_normalized ~ Distance * group, data = asma) %>% summary
+aov(Gray_Value_normalized ~ distance_microns * group, data = asma) %>% summary
 ```
 
 
 ```{r}
+set.seed(123)
 asma %>% 
-  ggplot(aes(Distance, Gray_Value_normalized)) +
+  ggplot(aes(distance_microns, Gray_Value_normalized)) +
   geom_line(aes(group = file, color = file)) +
   geom_vline(xintercept = 200, linetype = 2, size = 2, color = "gray40") +
-  geom_segment(aes(x = max(Distance) * 1.01, 
+  geom_segment(aes(x = max(distance_microns) * 1.01, 
                    y = 0.2, 
-                   xend = max(Distance) * 1.01, 
+                   xend = max(distance_microns) * 1.01, 
                    yend = 1.3), 
                size = 1) +
-  geom_text(aes(x = max(Distance) * 1.04, y = 0.75), angle = 90, label = "***") +
+  geom_text(aes(x = max(distance_microns) * 1.04, y = 0.75), angle = 90, label = "***") +
   theme_classic() +
   scale_color_brewer(name = NULL, type = "div", palette = 3) +
   scale_x_continuous(name = "Distance (um)") +
   scale_y_continuous(name = "normalized fluorsence intensity") +
-  labs(title = "normalized fluoresence intensity of a-SMA")
+  labs(title = "normalized fluoresence intensity of a-SMA") +
+  theme(axis.text.x = element_text(face = "bold", size = 13), 
+        axis.title.x = element_text(face = "bold", size = 15), 
+        axis.title.y = element_text(face = "bold", size = 13), 
+        axis.text.y = element_text(face = "bold", size = 15))
 
 # dir.create("G:/data/kidney/Tumor/PB3/res-microscope")
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-intensity-plot.tiff", width = 10)
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-intensity-plot.tiff", width = 10, height = 7)
 ```
 
 
@@ -504,10 +570,13 @@ rbind(pb3_corn_oil_asma, pb3_tam_asma) %>%
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "percentage of a-SMA positve area", 
                      breaks = seq(10, 30, 10), 
-                     labels = paste(seq(10, 30, 10), "%", sep = "")) +
-  theme_classic()
+                     labels = paste(seq(10, 30, 10), "%", sep = ""), 
+                     limits = c(0, 40)) +
+  theme_classic() +
+  theme(axis.text = element_text(face = "bold", size = 10))
 
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-positive-area.tiff", width = 10)
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-positive-area.tiff", 
+       width = 10, height = 7)
 ```
 
 
@@ -535,277 +604,191 @@ f480 %>%
                      labels = paste(seq(0, 50, 10), "%", sep = "")) +
   scale_x_discrete(name = NULL) +
   geom_text(x = 1.5, y = 52, label = "p < 0.01") +
-  theme_classic()
+  theme_classic() +
+  theme(axis.text = element_text(face = "bold", size = 13), 
+        axis.title = element_text(face = "bold", size = 15))
   
 
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/F480-positve-area.tiff", width = 10)
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/F480-positve-area.tiff", 
+       width = 10, height = 7)
 ```
 
 
 ## CD31 angiotool
 ```{r}
-cd31_corn_normal <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/CD31/normal/prob-maps/PB3-Corn-Oil-normal-CD31-auto-diameter.xls")
-cd31_corn_normal$group <- factor("Corn Oil")
-cd31_corn_tumor <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/CD31/tumor/prob-maps/PB3-Corn-Oil-tumor-CD31-auto-diameter.xls")
-cd31_corn_tumor$group <- factor("Corn Oil")
-
-cd31_tam_normal <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/CD31/normal/prob-maps/PB3-TAM-normal-CD31-auto-diameter.xls")
-cd31_tam_normal$group <- factor("Tamoxifen")
-cd31_tam_tumor <- readxl::read_xls("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/CD31/tumor/prob-maps/PB3-TAM-tumor-CD31-auto-diameter.xls")
-cd31_tam_tumor$group <- factor("Tamoxifen")
-```
-
-
-```{r}
-library(ggplot2)
-library(magrittr)
+library(janitor)
 library(dplyr)
+library(ggplot2)
+library(readxl)
 library(pipeR)
-library(patchwork)
+library(ggridges)
 
-get_pval <- function(obj){
-  obj[[1]][1, 5]
-}
-
-cd31_normal <- cd31_corn_normal %>% rbind(cd31_tam_normal) %>% 
-  select(-c(2:11)) %>% 
-  relocate(group, .after = 1)
+cd31_junction_corn <- read_excel("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/CD31/z-max-projection/junction/PB3-Corn-Oil-CD31-angiotools.xls", 
+                                 skip = 3, 
+                                 col_names = T) %>% 
+  clean_names()
 
 
-aov(`Vessels percentage area` ~ group, data = cd31_normal) %>% summary()
-p_normal_cd31_percentage <- cd31_normal %>% 
-  select(group, `Vessels percentage area`) %>% 
-  group_by(group) %>% 
-  mutate(mean_percentage = mean(`Vessels percentage area`), 
-         n = n(),
-         se = sd(`Vessels percentage area`)/sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean_percentage)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean_percentage - se, ymax = mean_percentage + se), width = 0.2) +
-  geom_jitter(aes(y = `Vessels percentage area`), width = 0.1) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "percentage of CD31 positive area", 
-                     breaks = seq(5, 45, 10), 
-                     labels = paste(seq(5, 45, 10), "%", sep = ""), 
-                     limits = c(0, 40)) +
+cd31_junction_tam <- read_excel("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/CD31/z-max-projection/junction/PB3-TAM-CD31-angiotools.xls", 
+                                skip = 3, 
+                                col_names = T) %>% 
+  clean_names()
+
+cd31_junction_corn %>% bind_rows(cd31_junction_tam) %>% 
+  mutate(group = ifelse(grepl("Corn", image_name), "Corn Oil", "Tamoxifen")) %>>%
+  (~ cd31_junction_density) %>% 
+  select(junctions_density, group) %>% 
+  ggplot(aes(group, junctions_density)) +
+  # geom_density_ridges(aes(x = junctions_density, y = group, fill = group))
+  geom_boxplot() +
+  geom_jitter(width = 0.1) +
+  geom_segment(aes(x = 1, y = max(junctions_density) * 1.1, 
+                   xend = 2, yend = max(junctions_density) * 1.1), 
+               size = 1) +
+  geom_text(aes(x = 1.5, y = max(junctions_density) * 1.15, label = "p < 0.05")) +
+  scale_y_continuous(name = "junctions density", 
+                     limits = c(0, max(cd31_junction_density$junctions_density) * 1.3)) +
   theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
+  theme(axis.text = element_text(size = 13, face = "bold"), 
+        axis.title = element_text(size = 15, face = "bold")) +
+  scale_x_discrete(name = NULL)
 
+aov(junctions_density ~ group, data = cd31_junction_density) %>% summary
 
-aov(`Junctions density` ~ group, data = cd31_normal) %>% summary()
-p_normal_cd31_junction_density <- cd31_normal %>% 
-  select(group, `Junctions density`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(`Junctions density`), 
-         se = sd(`Junctions density`)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = `Junctions density`), width = 0.1) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "Junction density") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-
-
-aov(`Average Vessels Length` ~ group, data = cd31_normal) %>% summary()
-p_normal_cd31_mean_length <- cd31_normal %>% 
-  select(group, `Average Vessels Length`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(`Average Vessels Length`), 
-         se = sd(`Average Vessels Length`)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = `Average Vessels Length`), width = 0.1) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "Average Vessel Length (um)",limits = c(0, 0.05)) +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-
-
-aov(`Mean E Lacunarity` ~ group, data = cd31_normal) %>% summary()
-p_normal_lacunarity <- cd31_normal %>% 
-  select(group, `Mean E Lacunarity`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(`Mean E Lacunarity`), 
-         se = sd(`Mean E Lacunarity`) / sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = `Mean E Lacunarity`), width = 0.2) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "Lacunarity") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-
-
-aov(`Explant area` ~ group, data = cd31_normal) %>% summary()
-p_normal_end_point_density <- cd31_normal %>% 
-  select(group, explant_area = `Explant area`, number_of_end_points = `Total Number of End Points`) %>% 
-  mutate(end_points_density = round(number_of_end_points / explant_area, 4)) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(end_points_density), 
-         se = sd(end_points_density) / sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = end_points_density), width = 0.2) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "end points density") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-```
-
-
-```{r}
-p_normal_cd31_percentage + 
-  p_normal_cd31_mean_length + 
-  p_normal_cd31_junction_density +
-  # p_normal_end_point_density +
-  p_normal_lacunarity +
-  plot_annotation(title = "out side of tumor", 
-                  theme = theme(plot.title = element_text(hjust = 0.5, size = 20)))
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/PB3-CD31-normal.tiff", width = 10, height = 7)
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/junctions_density.tiff", width = 10, height = 7)
 ```
 
 ```{r}
-cd31_tumor <- rbind(cd31_corn_tumor, cd31_tam_tumor) %>% select(-c(2:11)) %>% relocate(group, .after = 1)
+cd31_area_corn <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-corn-oil/CD31/z-max-projection/area/Results-PB3-Corn-Oil-CD31-area-fraction.csv") %>% 
+  clean_names()
+cd31_area_tam <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/CD31/z-max-projection/area/Results-PB3-TAM-CD31-area-fraction.csv") %>% 
+  clean_names()
 
-aov_tumor_cd31_percentage <- aov(`Vessels percentage area` ~ group, data = cd31_tumor) %>% summary 
-p_tumor_cd31_percentage <- cd31_tumor %>% 
-  select(group, `Vessels percentage area`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(`Vessels percentage area`), 
-         se = sd(`Vessels percentage area`)/sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = `Vessels percentage area`), width = 0.2) +
-  geom_segment(aes(x = 1, 
-                   y = max(cd31_tumor$`Vessels percentage area`) * 1.1, 
-                   xend = 2, 
-                   yend = max(cd31_tumor$`Vessels percentage area`) * 1.1), 
-               size = 1.2) +
-  geom_text(aes(x = 1.5, 
-                y = max(cd31_tumor$`Vessels percentage area`) * 1.2), 
-            label = round(get_pval(aov_tumor_cd31_percentage), 4)) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "percentage of CD31 positive area", 
-                     breaks = seq(5, 30, 5), 
-                     labels = paste(seq(5, 30, 5), "%", sep = ""), 
-                     limits = c(0, 30)) +
+cd31_area_corn %>% bind_rows(cd31_area_tam) %>% 
+  mutate(group = ifelse(grepl("TAM", label), "Tamoxifen", "Corn Oil")) %>>%
+  (~ cd31_area) %>% 
+  ggplot(aes(group, x_area)) +
+  geom_boxplot() +
+  geom_jitter(size = 1.5, width = 0.1) +
+  geom_segment(aes(x = 1, y = max(x_area) * 1.2, 
+                   xend = 2, yend = max(x_area) * 1.2), 
+               size = 1) +
+  geom_text(aes(x = 1.5, y = max(x_area) * 1.24, label = "ns")) +
   theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
+  theme(axis.text = element_text(face = "bold", size = 13), 
+        axis.title = element_text(face = "bold", size = 15)) +
+  scale_y_continuous(name = "percentage of CD31 \npositive area", 
+                     breaks = c(2, 4, 6), 
+                     labels = paste(c(2, 4, 6), "%", sep = "")) +
+  scale_x_discrete(name = NULL)
 
-
-aov_tumor_junctions_density <- aov(`Junctions density` ~ group, data = cd31_tumor) %>% summary
-p_tumor_junction_density <- cd31_tumor %>% 
-  select(`Image Name`, group, `Junctions density`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(`Junctions density`), 
-         se = sd(`Junctions density`)/sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = `Junctions density`), width = 0.2) +
-  geom_segment(aes(x = 1, 
-                   y = max(cd31_tumor$`Junctions density`) * 1.1), 
-               xend = 2, 
-               yend = max(cd31_tumor$`Junctions density`) * 1.1, 
-               size = 1.2) + 
-  geom_text(aes(x = 1.5, 
-                y = max(cd31_tumor$`Junctions density`) * 1.2), 
-            label = round(get_pval(aov_tumor_junctions_density), 4)) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "junctions density") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-
-
-aov_tumor_mean_vessels_length <- aov(`Average Vessels Length` ~ group, data = cd31_tumor) %>% summary
-p_tumor_mean_vessels_length <- cd31_tumor %>% 
-  select(group, average_vessels_length = `Average Vessels Length`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(average_vessels_length), 
-         se = sd(average_vessels_length)/sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = average_vessels_length), width = 0.2) +
-  geom_segment(aes(x = 1, 
-                   y = max(cd31_tumor$`Average Vessels Length`) * 1.1, 
-                   xend = 2, 
-                   yend = max(cd31_tumor$`Average Vessels Length`) * 1.1), 
-               size = 1.2) +
-  geom_text(aes(x = 1.5, y = max(cd31_tumor$`Average Vessels Length`) * 1.2), 
-            label = round(get_pval(aov_tumor_mean_vessels_length), 4)) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "Average Vessels Length (um)") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-
-
-aov(`Mean E Lacunarity` ~ group, data = cd31_tumor) %>% summary
-p_tumor_lacunarity <- cd31_tumor %>% 
-  select(group, mean_e_lacunarity = `Mean E Lacunarity`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         mean = mean(mean_e_lacunarity), 
-         se = sd(mean_e_lacunarity)/sqrt(n - 1)) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = mean_e_lacunarity), width = 0.2) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "Lacunarity") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
-
-
-
-aov(end_points_density ~ group, data = end_points_density) %>% summary
-p_tumor_end_points_density <- cd31_tumor %>% 
-  select(group, explant_area = `Explant area`, number_of_end_points = `Total Number of End Points`) %>% 
-  group_by(group) %>% 
-  mutate(n = n(), 
-         end_points_density = round(number_of_end_points / explant_area, 4),
-         mean = mean(end_points_density), 
-         se = sd(end_points_density)/sqrt(n - 1)) %>>% 
-    (~ end_points_density) %>% 
-  ggplot(aes(group, mean)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = end_points_density), width = 0.2) +
-  scale_x_discrete(name = NULL) +
-  scale_y_continuous(name = "end points density") +
-  theme_classic() +
-  theme(axis.title.y = element_text(size = 8))
+aov(x_area ~ group, data = cd31_area) %>% summary
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/cd31_positive_area.tiff")
 ```
 
 
+
+
+
+
+
+
+
+## PB3 WT
+### a-SMA, Pdgfrb colocalization
 ```{r}
-p_tumor_cd31_percentage +
-  p_tumor_mean_vessels_length +
-  p_tumor_junction_density +
-  # p_tumor_end_points_density +
-  p_tumor_lacunarity +
-  plot_annotation(title = "intro tumor", 
-                  theme = theme(plot.title = element_text(hjust = 0.5, size = 20)))
+asma_pdgfrb <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/prob-maps/PB3-WT-a-SMA-Pdgfrb-colocalization.scv", 
+                        sep = "\t") %>% 
+  clean_names()
 
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/PB3-CD31-tumor.tiff", width = 10, height = 7)
+pdgfrb <- asma_pdgfrb %>% 
+  filter(grepl("^Classification.+-0001", label)) %>% 
+  select(label_pdgfrb = label, x_area_pdgfrb = x_area)
+
+double <- asma_pdgfrb %>% 
+  filter(grepl("^Result", label)) %>% 
+  select(label_double = label, x_area_double = x_area)
+
+plot_data_asma_pdgfrb <- pdgfrb %>% cbind(double) %>% 
+  mutate(frac = round(x_area_double / x_area_pdgfrb, 3)) 
+
+plot_data_asma_pdgfrb %>% 
+  ggplot(aes("a-SMA", frac)) +
+  geom_boxplot() +
+  geom_jitter(size = 3, width = 0.1) +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = NULL, 
+                     breaks = seq(0.1, 0.4, 0.1), 
+                     labels = paste(seq(10, 40, 10), "%", sep = ""), 
+                     limits = c(0.1, 0.4), 
+                     expand = c(0, 0)) +
+  labs(title = "Double positive area to Pdgfrb positive area") +
+  theme_classic()
+
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/prob-maps/double-positive-area-to-pdgfrb-positive-area.tiff", 
+       width = 5, height = 7)
+```
+
+
+### CD45, Pdgfrb
+```{r}
+cd45_pdgfrb <- read.csv("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/CD45-Pdgfrb/prob-maps/PB3-WT-CD45-Pdgfrb-colocalization.csv") %>% 
+  clean_names()
+
+pdgfrb <- cd45_pdgfrb %>% 
+  filter(grepl("^Probability-.+-0001", label)) %>% 
+  select(label_pdgfrb = label, x_area_pdgfrb = x_area)
+
+double <- cd45_pdgfrb %>% 
+  filter(grepl("^Result", label)) %>% 
+  select(label_double = label, x_area_double = x_area)
+
+plot_data_cd45_pdgfrb <- cbind(double, pdgfrb) %>% 
+  mutate(frac = round(x_area_double / x_area_pdgfrb, 3))
+
+plot_data_cd45_pdgfrb %>% 
+  ggplot(aes("CD45", frac)) +
+  geom_boxplot() +
+  geom_jitter(size = 3, width = 0.1) +
+  scale_y_continuous(breaks = seq(0.1, 0.4, 0.1), 
+                     labels = paste(seq(10, 40, 10), "%", sep = ""), 
+                     limits = c(0.1, 0.4)) +
+  labs(x = NULL, y = NULL, 
+       title = "Double positive area to Pdgfrb positive area") +
+  theme_classic()
+
+ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/CD45-Pdgfrb/prob-maps/doubel-positive-area-to-pdgfrb-positive-area.tiff", width = 5, height = 7)
 ```
 
 
 
+# RT-PCR
+## PB3 Pdgf expression
+```{r}
+pb3_pdgfs <- readxl::read_xlsx("G:/data/RT-PCR/PB3/20210806/summary-20210806.xlsx")
 
+pb3_pdgfs %>% 
+  filter(!is.na(ddCt)) %>% 
+  group_by(Gene) %>% 
+  mutate(`2^-dCt` = 2^(-dCt), 
+         mean = mean(`2^-dCt`), 
+         n = n(), 
+         se = sd(`2^-dCt`) / sqrt(n - 1)) %>% 
+  ggplot(aes(Gene, mean)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_jitter(aes(Gene, `2^-dCt`), width = 0.1)+
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
+  labs(title = "Pdgfs expression in PB3 cell line") +
+  scale_x_discrete(name = NULL) +
+  scale_y_continuous(name = expression(paste("relative expression to GAPDH   ", "( ",2^-dCt, " )"))) +
+  theme_classic() +
+  scale_fill_discrete(name = NULL) +
+  theme(axis.text = element_text(face = "bold", size = 13), 
+        axis.title.y = element_text(size = 15))
+
+ggsave("G:/data/RT-PCR/PB3/20210806/Pdgfs-expression-in-pb3-cell-line.tiff", 
+       width = 10, height = 7)
+```
 
 
 
