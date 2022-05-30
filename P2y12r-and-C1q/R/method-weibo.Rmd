@@ -1,0 +1,17 @@
+---
+output: word_document
+bibliography: ref.bib
+csl: /home/yincy/git/styles/american-medical-association.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# method
+KEGG pathway KGML files and pathway related information was downloaded with KEGGREST[@Tenenbaum2021], then parsed to data.frame. P2ry12 downstream signal analysis was conducted with igraph[@Csardi2006], and visualized with ggraph[@Pedersen2021] and tidygraph[@Pedersen2020].
+
+
+# Reference
+
