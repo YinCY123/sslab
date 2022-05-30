@@ -20,10 +20,11 @@ library(patchwork)
 library(readxl)
 
 my_theme <- theme_classic() +
-  theme(axis.title = element_text(face = "bold", size = 15),
-        axis.text = element_text(face = "bold", size = 13), 
+  theme(axis.title = element_text(face = "bold", size = 20),
+        axis.text = element_text(face = "bold", size = 15), 
         title = element_text(face = "bold", size = 15))
 
+geom_bp <- function()
 get_pval <- function(x){
   x[[1]][1, 5]
 }
@@ -246,11 +247,12 @@ pooled %>%
   # geom_bar(aes(group, mean), stat = "identity", position = position_dodge()) +
   # geom_errorbar(aes(x = group, y = mean, ymin = mean - se, ymax = mean + se), width = 0.2) +
   geom_boxplot(aes(group, normalized_log2)) +
-  geom_jitter(aes(group, normalized_log2), width = 0.1) +
+  geom_jitter(aes(group, normalized_log2), width = 0.1, size = 4) +
   geom_segment(aes(x = 1, y = max(normalized_log2) * 1.2, 
                    xend = 2, yend = max(normalized_log2) * 1.2)) +
   geom_text(aes(x = 1.5, y = max(normalized_log2) * 1.25, 
-                label = "**")) +
+                label = "**"), 
+            size = 10) +
   scale_y_continuous(name = paste("log2 Fold change of \nphontons per second")) +
   scale_x_discrete(name = NULL) +
   my_theme
@@ -557,7 +559,8 @@ asma %>%
   my_theme
 
 # dir.create("G:/data/kidney/Tumor/PB3/res-microscope")
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-intensity-plot.tiff", width = 10, height = 7)
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/a-SMA-intensity-plot.tiff", 
+       width = 10, height = 7)
 ```
 
 
@@ -580,10 +583,10 @@ rbind(pb3_corn_oil_asma, pb3_tam_asma) %>%
   ggplot(aes(group, mean)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.1)) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = x_area),width = 0.1) +
+  geom_jitter(aes(y = x_area),width = 0.1, size = 4) +
   geom_segment(aes(x = 1, y = max(x_area) * 1.1, 
                    xend = 2, yend = max(x_area) * 1.1)) +
-  geom_text(aes(x = 1.5, y = max(x_area) * 1.14), label = "***") +
+  geom_text(aes(x = 1.5, y = max(x_area) * 1.14), label = "***", size = 10) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "Percentage of aSMA \npositive area") +
   my_theme
@@ -601,6 +604,7 @@ f480_tam <- readxl::read_excel("G:/data/kidney/Tumor/PB3/kidney-PB3-TAM/F480/cel
 
 ```{r}
 f480 <- rbind(f480_corn_oil, f480_tam)
+write.csv(f480[, -4], "G:/data/kidney/Tumor/PB3/res-microscope/F480-cells-per-region.csv")
 aov(num_cells ~ group, data = f480) %>% summary()
 t.test(num_cells ~ group, data = f480)
 
@@ -612,15 +616,15 @@ f480 %>%
   ggplot() +
   geom_bar(aes(group, mean), stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(x = group, y = mean, ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(group, num_cells), width = 0.1) +
+  geom_jitter(aes(group, num_cells), width = 0.1, size = 4) +
   geom_segment(aes(x = 1, y = max(num_cells) * 1.1, 
                    xend = 2, yend = max(num_cells) * 1.1)) +
-  geom_text(aes(x = 1.5, y = max(num_cells) * 1.15), label = "ns") +
+  geom_text(aes(x = 1.5, y = max(num_cells) * 1.15), label = "ns", size = 10) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "number of F480 positive \ncells per view") +
   my_theme
 
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/number-of-F480-positive-area.tiff", 
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/F480-cells-per-region.tiff", 
        width = 7, height = 7)
 ```
 
@@ -648,12 +652,12 @@ cd31_junction_corn %>% bind_rows(cd31_junction_tam) %>%
          se = sd(junctions_density)/sqrt(n - 1)) %>% 
   ggplot(aes(group, junctions_density)) +
   geom_bar(aes(group, mean), stat = "identity", position = position_dodge()) +
-  geom_jitter(width = 0.1) +
+  geom_jitter(width = 0.1, size = 4) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
   geom_segment(aes(x = 1, y = max(junctions_density) * 1.1, 
                    xend = 2, yend = max(junctions_density) * 1.1), 
                size = 1) +
-  geom_text(aes(x = 1.5, y = max(junctions_density) * 1.12, label = "*")) +
+  geom_text(aes(x = 1.5, y = max(junctions_density) * 1.12), label = "*", size = 10) +
   scale_y_continuous(name = expression(paste("junctions per  ", mm^2)), 
                      limits = c(0, max(cd31_junction_density$junctions_density) * 1.3)) +
   scale_x_discrete(name = NULL) +
@@ -661,7 +665,7 @@ cd31_junction_corn %>% bind_rows(cd31_junction_tam) %>%
 
 aov(junctions_density ~ group, data = cd31_junction_density) %>% summary
 
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/junctions_density.tiff", width = 7, height = 10)
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/CD31-junctions-density.tiff", width = 7, height = 10)
 ```
 
 ```{r}
@@ -680,11 +684,11 @@ cd31_area_corn %>% bind_rows(cd31_area_tam) %>>%
          se = sd(x_area)/sqrt(n - 1)) %>% 
   ggplot() +
   geom_bar(aes(group, mean), stat = "identity", position = position_dodge()) +
-  geom_jitter(aes(group, x_area), size = 1.5, width = 0.1) +
+  geom_jitter(aes(group, x_area), width = 0.1, size = 4) +
   geom_segment(aes(x = 1, y = max(x_area) * 1.2, 
                    xend = 2, yend = max(x_area) * 1.2), 
                size = 1) +
-  geom_text(aes(x = 1.5, y = max(x_area) * 1.25, label = "ns")) +
+  geom_text(aes(x = 1.5, y = max(x_area) * 1.25), label = "ns", size = 10) +
   scale_y_continuous(name = "Percentage of CD31 \npositive area", 
                      limits = c(0, 7), 
                      breaks = seq(0, 7, 2), 
@@ -693,7 +697,7 @@ cd31_area_corn %>% bind_rows(cd31_area_tam) %>>%
   my_theme
 
 aov(x_area ~ group, data = cd31_area) %>% summary
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/cd31_positive_area.tiff", 
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/CD31-positive-area.tiff", 
        width = 7, height = 10)
 ```
 
@@ -715,16 +719,16 @@ pdgfrb_area_corn_oil %>% rbind(pdgfrb_area_tam) %>>%
   ggplot(aes(group, mean)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(group, x_area), width = 0.1) +
+  geom_jitter(aes(group, x_area), width = 0.1, size = 4) +
   geom_segment(aes(x = 1, y = max(x_area) * 1.1, 
                    xend = 2, yend = max(x_area) * 1.1)) +
-  geom_text(aes(x = 1.5, y = max(x_area) * 1.12), label = "*") +
+  geom_text(aes(x = 1.5, y = max(x_area) * 1.12), label = "*", size = 10) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "Percentage of Pdgfrb \nPositive Area") +
   my_theme
 
 pdgfrb_are_aov <- aov(x_area ~ group, data = pdgfrb_area) %>% summary
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/Pdgfrb_positive_area.tiff", 
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/Pdgfrb-positive-area.tiff", 
        width = 7, height = 10)
 ```
 
@@ -742,16 +746,16 @@ pdgfrb_cell_corn_oil %>% rbind(pdgfrb_cell_tam) %>>%
   ggplot(aes(group, mean)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(group, num_cells), width = 0.1) +
+  geom_jitter(aes(group, num_cells), width = 0.1, size = 4) +
   geom_segment(aes(x = 1, y = max(num_cells) * 1.1, 
                    xend = 2, yend = max(num_cells) * 1.1)) +
-  geom_text(aes(x = 1.5, y = max(num_cells) * 1.12), label = "**") +
+  geom_text(aes(x = 1.5, y = max(num_cells) * 1.12), label = "**", size = 10) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "Number of Pdgfrb Positive \nCells per View") +
   my_theme
 
 aov(num_cells ~ group, data = pdgfrb_cells) %>% summary
-ggsave("G:/data/kidney/Tumor/PB3/res-microscope/Pdgfrb_cells_per-view.tiff", 
+ggsave("G:/data/kidney/Tumor/PB3/res-microscope/Pdgfrb-cells-per-view.tiff", 
        width = 7, height = 10)
 ```
 
@@ -769,9 +773,10 @@ asma_pdgfrb_coloc %>%
   ggplot(aes(x = "aSMA Pdgfrb colocalization", y = mean)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = spearman_rank_corelation), width = 0.1, size = 2) +
+  geom_jitter(aes(y = spearman_rank_corelation), width = 0.1, size = 4) +
   scale_y_continuous(name = "Spearman Rank Corelation", limits = c(0, 0.45)) +
   scale_x_discrete(name = NULL) +
+  ggtitle(label = "aSMA Pdgfrb colocalization coefficiency") +
   my_theme
 
 ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/a-SMA-Pdgfrb/aSMA-Pdgfrb-colocalization.tiff", 
@@ -791,9 +796,10 @@ cd45_pdgfrb_coloc %>%
   ggplot(aes(x = "CD45 Pdgfrb colocalization", y = mean)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +
-  geom_jitter(aes(y = spearman_rank_corelation), width = 0.1, size = 2) +
+  geom_jitter(aes(y = spearman_rank_corelation), width = 0.1, size = 4) +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "Spearman Rank Corelation", limits = c(0, 0.3)) +
+  ggtitle(label = "CD45 Pdgfrb colocalization coefficiency") +
   my_theme
 
 ggsave("G:/data/kidney/Tumor/PB3/kidney-PB3-WT/CD45-Pdgfrb/CD45-Pdgfrb-Colocalization.tiff", 
