@@ -31,23 +31,23 @@ ccrcc_query_info <- GDCquery(project = "TCGA-KIRC", # ccrCC
                          access = "open", 
                          legacy = F)
 
-saveRDS(ccrcc_query_info, "/home/yincy/git/Data/Kidney/TCGA/ccRCC/ccrcc_query_info.rds")
+saveRDS(ccrcc_query_info, "/home/yincy/git/data/kidney/TCGA/ccrcc_query_info.rds")
 getResults(query = ccrcc_query_info) 
 
-ccrcc_query_info <- readRDS("/home/yincy/git/Data/Kidney/TCGA/ccRCC/ccrcc_query_info.rds")
+ccrcc_query_info <- readRDS("/home/yincy/git/data/kidney/TCGA/ccrcc_query_info.rds")
 
-GDCdownload(query = ccrcc, 
-            directory = "/home/yincy/git/Data/Kidney/TCGA/ccRCC", 
+GDCdownload(query = ccrcc_query_info, 
+            directory = "/home/yincy/git/data/kidney/TCGA/", 
             files.per.chunk = 10, 
             method = "api")
 
 ccrcc <- GDCprepare(query = ccrcc_query_info, 
-                    directory = "/home/yincy/git/Data/Kidney/TCGA/ccRCC")
+                    directory = "/home/yincy/git/data/kidney/TCGA/")
 
-saveRDS(ccrcc_counts, 
-        file = "/home/yincy/git/Data/Kidney/TCGA/ccRCC/ccrcc_summrizedexpriment.rds")
+saveRDS(ccrcc, 
+        file = "/home/yincy/git/data/kidney/ccrcc_summrizedexpriment.rds")
 
-ccrcc <- readRDS("/home/yincy/git/Data/Kidney/TCGA/ccRCC/ccrcc_summrizedexpriment.rds")
+ccrcc <- readRDS("/home/yincy/git/data/kidney/ccrcc_summrizedexpriment.rds")
 
 colData(ccrcc)[, 1:10, 1:3]
 
@@ -107,30 +107,6 @@ library(multcomp)
 
 fit <- aov(fpkm_pdgfb ~ ajcc_pathologic_stage, data = pdgfb_fpkm) 
 pairwise <- TukeyHSD(fit)
-```
-
-
-```{r}
-barcodes <- colData(ccrcc)$patient %>% unique()
-clinical_query_info <- GDCquery(project = "TCGA-KIRC", 
-                          data.category = "Clinical", 
-                          file.type = 'xml', 
-                          barcode = barcodes)
-
-saveRDS(clinical_info, file = "/home/yincy/git/Data/Kidney/TCGA/ccRCC/clinical_query_info.rds")
-
-GDCdownload(query = clinical_query_info, 
-            directory = "/home/yincy/git/Data/Kidney/TCGA/ccRCC/", 
-            method = "api", 
-            files.per.chunk = 10)
-
-
-clinical <- GDCprepare_clinic(query = clinical_query_info, 
-                              clinical.info = "patient", 
-                              directory = "/home/yincy/git/Data/Kidney/TCGA/ccRCC/")
-saveRDS(clinical, 
-        file = "/home/yincy/git/Data/Kidney/TCGA/ccRCC/clinical_info.rds")
-clinical %>% str
 ```
 
 
